@@ -61,30 +61,7 @@ namespace ExternalLCDIntegration
             }
 
             _isRunning = !_isRunning;
-            //throw new NotImplementedException();
         }
-        /*
-        private void UpdateTextBox()
-        {
-            int i = 0;
-            do
-            {
-                i++;
-                UpdateBox(i);
-            } while (true);
-        }
-
-        public void UpdateBox(int i)
-        {
-            if (InvokeRequired)
-            {
-                this.Invoke(new Action<decimal>(UpdateTextBox), new object[] { C });
-                return;
-            }
-            textBox1.Text = "Das ist: " + C;
-            textBox1.Update();
-        }
-        */
 
         private void DoTheLoop()
         {
@@ -102,7 +79,7 @@ namespace ExternalLCDIntegration
                 Dispatcher.BeginInvoke(new Action(() => { DoShit(i); }));
                 //test = TextBox1.Text;
                 //TextBox1.Text = i.ToString();
-            } while (true);
+            } while (_isRunning);
         }
 
         private void DoShit(int i)
@@ -115,18 +92,17 @@ namespace ExternalLCDIntegration
             DoTheLoop();
             /*
             BackgroundWorker worker = (BackgroundWorker)sender;
-            
+            int i = 0;
             while (worker != null && !worker.CancellationPending)
             {
-                int i = 0;
+                
                 Stopwatch sw = Stopwatch.StartNew();
-                while (sw.ElapsedMilliseconds < 500)
-                {
-
-                }
-                worker.ReportProgress(0, "AN OBJECT TO PASS TO THE UI-THREAD");
+                if (sw.ElapsedMilliseconds < 500)
+                    continue;
+                i++;
+                Dispatcher.BeginInvoke(new Action(() => { DoShit(i); }));
             }
-            */
+            */   
         }
 
         

@@ -1,0 +1,19 @@
+﻿<Window x:Class="ExternalLCDIntegration.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ExternalLCDIntegration"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="459">
+    <Grid Height="424" Margin="10,0,0,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0*"/>
+            <ColumnDefinition Width="0*"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Button x:Name="StartButton" Content="Start" Click="StartButton_OnClick" HorizontalAlignment="Left" Margin="68,192,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.019,0.997" Grid.Column="1" Height="20" Width="40" Grid.ColumnSpan="2"/>
+        <TextBox Grid.ColumnSpan="3" x:Name="TextBox1" HorizontalAlignment="Left" Margin="108,109,0,0" Text="Test" TextWrapping="Wrap" VerticalAlignment="Top" Width="73"/>
+
+    </Grid>
+</Window>

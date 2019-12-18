@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29403.142
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExternalLCDIntegration", "ExternalLCDIntegration\ExternalLCDIntegration.csproj", "{C86C8152-D4BD-4578-9757-A1B45899F2B2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C86C8152-D4BD-4578-9757-A1B45899F2B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C86C8152-D4BD-4578-9757-A1B45899F2B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C86C8152-D4BD-4578-9757-A1B45899F2B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C86C8152-D4BD-4578-9757-A1B45899F2B2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {92E0976D-4611-4427-A159-99D86869A607}
+	EndGlobalSection
+EndGlobal

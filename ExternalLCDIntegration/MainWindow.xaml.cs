@@ -77,6 +77,7 @@ namespace ExternalLCDIntegration
         {
             screenWidth = (int)Math.Floor(SystemParameters.PrimaryScreenWidth);
             screenHeight = (int)Math.Floor(SystemParameters.PrimaryScreenHeight);
+            
             var totals = new long[] { 0, 0, 0 };
             do
             {
@@ -86,6 +87,10 @@ namespace ExternalLCDIntegration
                     Thread.Sleep(100);
                 }
                 var screenBitmap = new Bitmap(screenWidth, screenHeight);
+                using (Graphics g = Graphics.FromImage(screenBitmap))
+                {
+                    //g.CopyFromScreen(());
+                }
                 var format = screenBitmap.PixelFormat;
                 int bppModifier = format == System.Drawing.Imaging.PixelFormat.Format24bppRgb ? 3 : 4; // cutting corners, will fail on anything else but 32 and 24 bit images
                 var sourceData = screenBitmap.LockBits(new Rectangle(0, 0, screenWidth, screenHeight), ImageLockMode.ReadOnly,

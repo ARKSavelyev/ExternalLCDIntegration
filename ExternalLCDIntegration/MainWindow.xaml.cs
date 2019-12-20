@@ -109,9 +109,11 @@ namespace ExternalLCDIntegration
                         }
                     }
                 }
-                int avgB = (int) (totals[0] / (screenWidth * screenHeight));
-                int avgG = (int) (totals[1] / (screenWidth * screenHeight));
-                int avgR = (int) (totals[2] / (screenWidth * screenHeight));
+
+                var count = screenWidth * screenHeight;
+                int avgB = (int) (totals[0] / count);
+                int avgG = (int) (totals[1] / count);
+                int avgR = (int) (totals[2] / count);
 
                 Dispatcher.BeginInvoke(new Action(() => { PrintRGB(avgB, avgG, avgR); }));
             } while (_isRunning);

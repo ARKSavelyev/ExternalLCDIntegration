@@ -68,31 +68,6 @@ namespace ExternalLCDIntegration
             _isRunning = !_isRunning;
         }
 
-        private void DoTheLoop()
-        {
-            int i = 0;
-            string test;
-            do
-            {
-                Stopwatch sw = Stopwatch.StartNew();
-                while (sw.ElapsedMilliseconds < 500)
-                {
-                    Thread.Sleep(100);
-                }
-                i++;
-                //TextBox1.Dispatcher.BeginInvoke(new Action(()=>{ TextBox1.Text = i.ToString(); }));
-                Dispatcher.BeginInvoke(new Action(() => { DoShit(i); }));
-                //test = TextBox1.Text;
-                //TextBox1.Text = i.ToString();
-            } while (_isRunning);
-        }
-
-        private void DoShit(int i)
-        {
-            //var screen = new Bitmap(screenHeight,);
-            TextBox1.Text = $"Width: {screenWidth.ToString()} Height: {screenHeight.ToString()}";
-        }
-
         private void PrintRGB(int avrB, int avrG, int avrR)
         {
             TextBox1.Text = $"R: {avrR.ToString()} G: {avrG.ToString()} B: {avrB.ToString()}";
@@ -130,12 +105,6 @@ namespace ExternalLCDIntegration
                             {
                                 int idx = y * stride + x * bppModifier + color;
                                 totals[color] += p[idx];
-                                /*
-                                int idx = y * stride + x * bppModifier;
-                                totals[0] += p[idx];
-                                totals[1] += p[idx+1];
-                                totals[2] += p[idx+2];
-                                */
                             }
                         }
                     }
@@ -153,22 +122,7 @@ namespace ExternalLCDIntegration
         private void BackgroundWorkerOnDoWork(object sender, DoWorkEventArgs e)
         {
             GetAverageColor();
-            //DoTheLoop();
-            /*
-            BackgroundWorker worker = (BackgroundWorker)sender;
-            int i = 0;
-            while (worker != null && !worker.CancellationPending)
-            {
-                
-                Stopwatch sw = Stopwatch.StartNew();
-                if (sw.ElapsedMilliseconds < 500)
-                    continue;
-                i++;
-                Dispatcher.BeginInvoke(new Action(() => { DoShit(i); }));
-            }
-            */   
         }
 
-        
     }
 }

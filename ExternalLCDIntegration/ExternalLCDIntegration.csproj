@@ -15,4 +15,10 @@
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="OpenHardwareMonitorLib">
+      <HintPath>External\OpenHardwareMonitorLib.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

@@ -17,6 +17,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using OpenHardwareMonitor.Hardware;
 using Point = System.Drawing.Point;
 using Rectangle = System.Drawing.Rectangle;
 
@@ -127,7 +128,7 @@ namespace ExternalLCDIntegration
             
         }
 
-        private void BackgroundWorkerOnDoWork(object sender, DoWorkEventArgs e)
+    private void BackgroundWorkerOnDoWork(object sender, DoWorkEventArgs e)
         {
             GetAverageColor();
         }

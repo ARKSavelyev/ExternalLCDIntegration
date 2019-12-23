@@ -17,6 +17,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Point = System.Drawing.Point;
 using Rectangle = System.Drawing.Rectangle;
 
 namespace ExternalLCDIntegration
@@ -77,10 +78,10 @@ namespace ExternalLCDIntegration
         {
             screenWidth = (int)Math.Floor(SystemParameters.PrimaryScreenWidth);
             screenHeight = (int)Math.Floor(SystemParameters.PrimaryScreenHeight);
-            
-            var totals = new long[] { 0, 0, 0 };
+            var size = new System.Drawing.Size(screenWidth, screenHeight);
             do
             {
+                var totals = new long[] { 0, 0, 0 };
                 Stopwatch sw = Stopwatch.StartNew();
                 while (sw.ElapsedMilliseconds < 500)
                 {
@@ -89,7 +90,7 @@ namespace ExternalLCDIntegration
                 var screenBitmap = new Bitmap(screenWidth, screenHeight);
                 using (Graphics g = Graphics.FromImage(screenBitmap))
                 {
-                    //g.CopyFromScreen(());
+                    g.CopyFromScreen(Point.Empty, Point.Empty, size);
                 }
                 var format = screenBitmap.PixelFormat;
                 int bppModifier = format == System.Drawing.Imaging.PixelFormat.Format24bppRgb ? 3 : 4; // cutting corners, will fail on anything else but 32 and 24 bit images

@@ -5,15 +5,45 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ExternalLCDIntegration"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="459">
+        Title="MainWindow" Height="228" Width="459">
     <Grid Height="424" Margin="10,0,0,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="132*"/>
+            <RowDefinition Height="177*"/>
+            <RowDefinition Height="110*"/>
+            <RowDefinition Height="5*"/>
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="0*"/>
             <ColumnDefinition Width="0*"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <Button x:Name="StartButton" Content="Start" Click="StartButton_OnClick" HorizontalAlignment="Left" Margin="68,192,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.019,0.997" Grid.Column="1" Height="20" Width="40" Grid.ColumnSpan="2"/>
-        <TextBox Grid.ColumnSpan="3" x:Name="TextBox1" HorizontalAlignment="Left" Margin="108,109,0,0" Text="Test" TextWrapping="Wrap" VerticalAlignment="Top" Width="73"/>
+        <Button x:Name="StartButton" Content="Start" Click="StartButton_OnClick" HorizontalAlignment="Left" Margin="312,91,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.019,0.997" Grid.Column="1" Height="36" Width="76" Grid.ColumnSpan="2"/>
+        <TextBox Grid.ColumnSpan="3" x:Name="TextBox1" HorizontalAlignment="Left" Margin="196,91,0,0" Text="Test" TextWrapping="Wrap" VerticalAlignment="Top" Width="80" Height="36"/>
+        <Label x:Name="comLabel" Content="Choose ComPort:" HorizontalAlignment="Left" Margin="43,39,0,0" VerticalAlignment="Top" FontFamily="Segoe Print" FontSize="14" FontWeight="Bold" Foreground="#FF14F909" Grid.ColumnSpan="3"/>
+        <ComboBox x:Name="comList" HorizontalAlignment="Left" Margin="196,39,0,0" VerticalAlignment="Top" Width="80" RenderTransformOrigin="0.6,0" Height="35" FontFamily="Segoe Print" FontSize="14" FontWeight="Bold" BorderBrush="#00ACACAC" Foreground="#FF27CF27" Grid.ColumnSpan="3">
+            <ComboBox.OpacityMask>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="#FFA01E1E" Offset="0"/>
+                    <GradientStop Color="#FFDA1C1C" Offset="1"/>
+                </LinearGradientBrush>
+            </ComboBox.OpacityMask>
+            <ComboBox.Background>
+                <RadialGradientBrush>
+                    <GradientStop Color="#00F0F0F0" Offset="0"/>
+                    <GradientStop Color="#3FFD8725" Offset="1"/>
+                </RadialGradientBrush>
+            </ComboBox.Background>
+        </ComboBox>
+        <Button x:Name="ConnectingBT" Content="Connect" HorizontalAlignment="Left" Margin="312,39,0,0" VerticalAlignment="Top" Width="76" Height="35" FontFamily="Segoe Print" FontSize="14" FontWeight="Bold" Foreground="#FF27CF27" BorderBrush="White" Click="ConnectingBT_Click" Grid.ColumnSpan="3">
+            <Button.Background>
+                <RadialGradientBrush>
+                    <GradientStop Color="#00000000"/>
+                    <GradientStop Color="#3FE6CA1D" Offset="1"/>
+                </RadialGradientBrush>
+            </Button.Background>
+        </Button>
+        <Label x:Name="OutputLabel" Content="Output:" HorizontalAlignment="Left" Margin="109,92,0,0" VerticalAlignment="Top" FontFamily="Segoe Print" FontSize="14" FontWeight="Bold" Foreground="#FF14F909" Grid.ColumnSpan="3"/>
 
     </Grid>
 </Window>

@@ -1,23 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
-using System.Text;
+using System.IO.Ports;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using OpenHardwareMonitor.Hardware;
 using Point = System.Drawing.Point;
 using Rectangle = System.Drawing.Rectangle;
 
@@ -28,10 +16,13 @@ namespace ExternalLCDIntegration
     /// </summary>
     public partial class MainWindow : Window
     {
-        private BackgroundWorker _backgroundWorker;
         private bool _isRunning = false;
-        private int screenWidth;
-        private int screenHeight;
+        private int _screenWidth;
+        private int _screenHeight;
+        private SerialPort _port;
+        private readonly BackgroundWorker _backgroundWorker;
+        private readonly int _ledCount = 120;
+        private readonly string _portMessage = "Don't be a Digga, \n Choose a Comport for your Nigga!";
 
         public MainWindow()
         {
@@ -42,8 +33,20 @@ namespace ExternalLCDIntegration
                 WorkerSupportsCancellation = true
             };
             _backgroundWorker.DoWork += BackgroundWorkerOnDoWork;
+
+            Closing += OnWindowClosing;
+
+            string[] portNames = SerialPort.GetPortNames();
+            foreach (var port in portNames)
+            {
+                comList.Items.Add(port);
+            }
         }
 
+        private void OnWindowClosing(object sender, CancelEventArgs e)
+        {
+            _port?.Close();
+        }
 
         private void StartButton_OnClick(object sender, RoutedEventArgs e)
         {
@@ -77,9 +80,9 @@ namespace ExternalLCDIntegration
 
         private void GetAverageColor()
         {
-            screenWidth = (int)Math.Floor(SystemParameters.PrimaryScreenWidth);
-            screenHeight = (int)Math.Floor(SystemParameters.PrimaryScreenHeight);
-            var size = new System.Drawing.Size(screenWidth, screenHeight);
+            _screenWidth = (int)Math.Floor(SystemParameters.PrimaryScreenWidth);
+            _screenHeight = (int)Math.Floor(SystemParameters.PrimaryScreenHeight);
+            var size = new System.Drawing.Size(_screenWidth, _screenHeight);
             do
             {
                 var totals = new long[] { 0, 0, 0 };
@@ -88,14 +91,14 @@ namespace ExternalLCDIntegration
                 {
                     Thread.Sleep(100);
                 }
-                var screenBitmap = new Bitmap(screenWidth, screenHeight);
+                var screenBitmap = new Bitmap(_screenWidth, _screenHeight);
                 using (Graphics g = Graphics.FromImage(screenBitmap))
                 {
                     g.CopyFromScreen(Point.Empty, Point.Empty, size);
                 }
                 var format = screenBitmap.PixelFormat;
                 int bppModifier = format == System.Drawing.Imaging.PixelFormat.Format24bppRgb ? 3 : 4; // cutting corners, will fail on anything else but 32 and 24 bit images
-                var sourceData = screenBitmap.LockBits(new Rectangle(0, 0, screenWidth, screenHeight), ImageLockMode.ReadOnly,
+                var sourceData = screenBitmap.LockBits(new Rectangle(0, 0, _screenWidth, _screenHeight), ImageLockMode.ReadOnly,
                     format);
                 var stride = sourceData.Stride;
                 var scan = sourceData.Scan0;
@@ -104,33 +107,79 @@ namespace ExternalLCDIntegration
                 {
                     byte* p = (byte*)(void*)scan;
 
-                    for (int y = 0; y < screenHeight; y++)
+                    for (var y = 0; y < _screenHeight; y++)
                     {
-                        for (int x = 0; x < screenWidth; x++)
+                        for (var x = 0; x < _screenWidth; x++)
                         {
-                            for (int color = 0; color < 3; color++)
+                            for (var color = 0; color < 3; color++)
                             {
-                                int idx = y * stride + x * bppModifier + color;
+                                var idx = y * stride + x * bppModifier + color;
                                 totals[color] += p[idx];
                             }
                         }
                     }
                 }
 
-                var count = screenWidth * screenHeight;
-                int avgB = (int) (totals[0] / count);
-                int avgG = (int) (totals[1] / count);
-                int avgR = (int) (totals[2] / count);
-
+                var count = _screenWidth * _screenHeight;
+                var avgB = (byte) (totals[0] / count);
+                var avgG = (byte) (totals[1] / count);
+                var avgR = (byte) (totals[2] / count);
+                var array = CreateByteArray(avgR, avgG, avgB);
+                SendDataToSerialPort(array, array.Length);
                 Dispatcher.BeginInvoke(new Action(() => { PrintRGB(avgB, avgG, avgR); }));
             } while (_isRunning);
-
-            
         }
 
-    private void BackgroundWorkerOnDoWork(object sender, DoWorkEventArgs e)
+        private byte[] CreateByteArray(byte R, byte G, byte B)
         {
+            var newLength = _ledCount * 3;
+            var arrayRGB = new byte[newLength];
+
+            for (var i = 0; i < newLength; i++)
+            {
+                arrayRGB[i++] = R;
+                arrayRGB[i++] = G;
+                arrayRGB[i] = B;
+            }
+            return arrayRGB;
+        }
+
+        private void BackgroundWorkerOnDoWork(object sender, DoWorkEventArgs e)
+        {
+            if (_port == null)
+            {
+                MessageBox.Show(_portMessage);
+                return;
+            }
             GetAverageColor();
+        }
+
+        private void ConnectingBT_Click(object sender, RoutedEventArgs e)
+        {
+            if (_port == null)
+            {
+                if (comList.SelectedItem == null) MessageBox.Show(_portMessage);
+                else
+                {
+                    String comPortName = comList.SelectedItem.ToString();
+                    _port = new SerialPort(comPortName, 115200, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.One);
+                    _port.ReadTimeout = 500;
+                    _port.WriteTimeout = 500;
+                    _port.Open();
+                    ConnectingBT.Content = "Disconnect";
+                }
+            }
+            else
+            {
+                _port.Close();
+                _port = null;
+                ConnectingBT.Content = "Connect";
+            }
+        }
+
+        private void SendDataToSerialPort(byte[] data, int len)//array length should be 3 times bigger than LEDCount
+        {
+            _port.Write(data, 0, len);
         }
 
     }

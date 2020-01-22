@@ -19,10 +19,13 @@ namespace ExternalLCDIntegration
         private bool _isRunning = false;
         private int _screenWidth;
         private int _screenHeight;
+        private int _horizontalLedCount;
+        private int _verticalLedCount;
         private SerialPort _port;
         private readonly BackgroundWorker _backgroundWorker;
         private readonly int _ledCount = 120;
-        private readonly string _portMessage = "Don't be a Digga, \n Choose a Comport for your Nigga!";
+        private readonly string _portMessage = "Please choose a comport before starting background job.";
+        private readonly string _ledMessage = "The Led Count is invalid.";
 
         public MainWindow()
         {
@@ -50,17 +53,6 @@ namespace ExternalLCDIntegration
 
         private void StartButton_OnClick(object sender, RoutedEventArgs e)
         {
-            /*
-            if (_backgroundWorker == null)
-            {
-                _backgroundWorker = new BackgroundWorker
-                {
-                    WorkerReportsProgress = true,
-                    WorkerSupportsCancellation = true
-                };
-                _backgroundWorker.DoWork += BackgroundWorkerOnDoWork;
-            }
-            */
             if (_isRunning)
             {
                 _backgroundWorker.CancelAsync();
@@ -75,13 +67,16 @@ namespace ExternalLCDIntegration
 
         private void PrintRGB(int avrB, int avrG, int avrR)
         {
-            TextBox1.Text = $"R: {avrR.ToString()} G: {avrG.ToString()} B: {avrB.ToString()}";
+            OutputBox.Text = $"R: {avrR.ToString()} G: {avrG.ToString()} B: {avrB.ToString()}";
         }
 
         private void GetAverageColor()
         {
             _screenWidth = (int)Math.Floor(SystemParameters.PrimaryScreenWidth);
             _screenHeight = (int)Math.Floor(SystemParameters.PrimaryScreenHeight);
+            var verticalBlock = _screenHeight / _verticalLedCount;
+            var horizontalBlock = _screenWidth / _horizontalLedCount;
+
             var size = new System.Drawing.Size(_screenWidth, _screenHeight);
             do
             {
@@ -151,8 +146,30 @@ namespace ExternalLCDIntegration
                 MessageBox.Show(_portMessage);
                 return;
             }
+
+            if (!GetLedCount())
+            {
+                MessageBox.Show(_ledMessage);
+                return;
+            }
+
             GetAverageColor();
         }
+
+        private bool GetLedCount()
+        {
+            try
+            {
+                _horizontalLedCount = int.Parse(HorizontalLedCount.Text);
+                _verticalLedCount = int.Parse(VerticalLedCount.Text);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
 
         private void ConnectingBT_Click(object sender, RoutedEventArgs e)
         {
@@ -179,7 +196,9 @@ namespace ExternalLCDIntegration
 
         private void SendDataToSerialPort(byte[] data, int len)//array length should be 3 times bigger than LEDCount
         {
+            char[] StopByte = {'c'};
             _port.Write(data, 0, len);
+            _port.Write(StopByte,0,1);
         }
 
     }

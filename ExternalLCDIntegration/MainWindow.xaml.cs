@@ -17,10 +17,10 @@ namespace ExternalLCDIntegration
     public partial class MainWindow : Window
     {
         private bool _isRunning = false;
-        private int _screenWidth;
-        private int _screenHeight;
-        private int _horizontalLedCount;
-        private int _verticalLedCount;
+        private int _horizontalLedCountTop;
+        private int _horizontalLedCountBottom;
+        private int _verticalLedCountLeft;
+        private int _verticalLedCountRight;
         private SerialPort _port;
         private readonly BackgroundWorker _backgroundWorker;
         private readonly int _ledCount = 120;
@@ -65,46 +65,40 @@ namespace ExternalLCDIntegration
             _isRunning = !_isRunning;
         }
 
-        private void PrintRGB(int avrB, int avrG, int avrR)
+        private void WaitMilliseconds(int milliseconds)
         {
-            OutputBox.Text = $"R: {avrR.ToString()} G: {avrG.ToString()} B: {avrB.ToString()}";
+            var sw = Stopwatch.StartNew();
+            while (sw.ElapsedMilliseconds < milliseconds)
+            {
+                Thread.Sleep(100);
+            }
         }
-
         private void GetAverageColor()
         {
-            _screenWidth = (int)Math.Floor(SystemParameters.PrimaryScreenWidth);
-            _screenHeight = (int)Math.Floor(SystemParameters.PrimaryScreenHeight);
-            var verticalBlock = _screenHeight / _verticalLedCount;
-            var horizontalBlock = _screenWidth / _horizontalLedCount;
-
-            var size = new System.Drawing.Size(_screenWidth, _screenHeight);
+            GetScreenResolution(out var screenWidth, out var screenHeight);
+            var size = new System.Drawing.Size(screenWidth, screenHeight);
             do
             {
                 var totals = new long[] { 0, 0, 0 };
-                Stopwatch sw = Stopwatch.StartNew();
-                while (sw.ElapsedMilliseconds < 500)
-                {
-                    Thread.Sleep(100);
-                }
-                var screenBitmap = new Bitmap(_screenWidth, _screenHeight);
-                using (Graphics g = Graphics.FromImage(screenBitmap))
+                WaitMilliseconds(500);
+                var screenBitmap = new Bitmap(screenWidth, screenHeight);
+                using (var g = Graphics.FromImage(screenBitmap))
                 {
                     g.CopyFromScreen(Point.Empty, Point.Empty, size);
                 }
                 var format = screenBitmap.PixelFormat;
-                int bppModifier = format == System.Drawing.Imaging.PixelFormat.Format24bppRgb ? 3 : 4; // cutting corners, will fail on anything else but 32 and 24 bit images
-                var sourceData = screenBitmap.LockBits(new Rectangle(0, 0, _screenWidth, _screenHeight), ImageLockMode.ReadOnly,
+                var bppModifier = format == System.Drawing.Imaging.PixelFormat.Format24bppRgb ? 3 : 4; // cutting corners, will fail on anything else but 32 and 24 bit images
+                var sourceData = screenBitmap.LockBits(new Rectangle(0, 0, screenWidth, screenHeight), ImageLockMode.ReadOnly,
                     format);
                 var stride = sourceData.Stride;
                 var scan = sourceData.Scan0;
 
                 unsafe
                 {
-                    byte* p = (byte*)(void*)scan;
-
-                    for (var y = 0; y < _screenHeight; y++)
+                    var p = (byte*)(void*)scan;
+                    for (var y = 0; y < screenHeight; y++)
                     {
-                        for (var x = 0; x < _screenWidth; x++)
+                        for (var x = 0; x < screenWidth; x++)
                         {
                             for (var color = 0; color < 3; color++)
                             {
@@ -115,14 +109,30 @@ namespace ExternalLCDIntegration
                     }
                 }
 
-                var count = _screenWidth * _screenHeight;
-                var avgB = (byte) (totals[0] / count);
-                var avgG = (byte) (totals[1] / count);
-                var avgR = (byte) (totals[2] / count);
+                var count = screenWidth * screenHeight;
+                var avgB = GetAverageColour(totals[0], count);
+                var avgG = GetAverageColour(totals[1], count);
+                var avgR = GetAverageColour(totals[2], count);
                 var array = CreateByteArray(avgR, avgG, avgB);
                 SendDataToSerialPort(array, array.Length);
                 Dispatcher.BeginInvoke(new Action(() => { PrintRGB(avgB, avgG, avgR); }));
             } while (_isRunning);
+        }
+
+        private void GetScreenResolution(out int screenWidth, out int screenHeight)
+        {
+            screenWidth = (int)Math.Floor(SystemParameters.PrimaryScreenWidth);
+            screenHeight = (int)Math.Floor(SystemParameters.PrimaryScreenHeight);
+        }
+
+        private byte GetAverageColour(long total, int count)
+        {
+            return (byte)(total / count);
+        }
+
+        private void PrintRGB(int avrB, int avrG, int avrR)
+        {
+            OutputBox.Text = $"R: {avrR.ToString()} G: {avrG.ToString()} B: {avrB.ToString()}";
         }
 
         private byte[] CreateByteArray(byte R, byte G, byte B)
@@ -146,13 +156,11 @@ namespace ExternalLCDIntegration
                 MessageBox.Show(_portMessage);
                 return;
             }
-
             if (!GetLedCount())
             {
                 MessageBox.Show(_ledMessage);
                 return;
             }
-
             GetAverageColor();
         }
 
@@ -160,8 +168,10 @@ namespace ExternalLCDIntegration
         {
             try
             {
-                _horizontalLedCount = int.Parse(HorizontalLedCount.Text);
-                _verticalLedCount = int.Parse(VerticalLedCount.Text);
+                _horizontalLedCountTop = int.Parse(HorizontalLedCountTop.Text);
+                _horizontalLedCountBottom = int.Parse(HorizontalLedCountBottom.Text);
+                _verticalLedCountLeft = int.Parse(VerticalLedCountLeft.Text);
+                _verticalLedCountRight = int.Parse(VerticalLedCountRight.Text);
                 return true;
             }
             catch (Exception)

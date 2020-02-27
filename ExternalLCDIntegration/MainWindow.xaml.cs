@@ -18,10 +18,10 @@ namespace ExternalLCDIntegration
     public partial class MainWindow : Window
     {
         private bool _isRunning = false;
-        private int _horizontalLedCountTop;
-        private int _horizontalLedCountBottom;
-        private int _verticalLedCountLeft;
-        private int _verticalLedCountRight;
+        private int _horizontalLedCountTop = 5;
+        private int _horizontalLedCountBottom = 5;
+        private int _verticalLedCountLeft = 5;
+        private int _verticalLedCountRight = 5;
         private SerialPort _port;
         private readonly BackgroundWorker _backgroundWorker;
         private readonly string _portMessage = "Please choose a comport before starting background job.";
@@ -136,9 +136,9 @@ namespace ExternalLCDIntegration
                             }
                             pixelCount++;
                         }
-                        array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
-                        totals.CleanArray();
                     }
+                    array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
+                    totals.CleanArray();
                     #endregion
 
                     #region VerticalLeft
@@ -149,7 +149,7 @@ namespace ExternalLCDIntegration
                     {
                         for (var x = 0; x < VerticalBlockX; x++)
                         {
-                            var startY = VerticalBlockY * x;
+                            var startY = VerticalBlockY * y;
                             var endY = startY + VerticalBlockY;
                             for (var blockY = startY; blockY < endY; blockY++)
                             {
@@ -167,9 +167,8 @@ namespace ExternalLCDIntegration
                     pixelCount = 0;
                     for (var x = 0; x < VerticalBlockX; x++)
                     {
-                        var startY = VerticalBlockY * x;
-                        var endY = startY + VerticalBlockY;
-                        for (var blockY = startY; blockY < endY; blockY++)
+                        var startY = VerticalBlockY * _verticalLedCountLeft - 1;
+                        for (var blockY = startY; blockY < screenHeight; blockY++)
                         {
                             for (var color = 0; color < 3; color++)
                             {
@@ -190,7 +189,7 @@ namespace ExternalLCDIntegration
                     {
                         for (var x = screenWidth- VerticalBlockX; x < screenWidth; x++)
                         {
-                            var startY = VerticalBlockY * x;
+                            var startY = VerticalBlockY * y;
                             var endY = startY + VerticalBlockY;
                             for (var blockY = startY; blockY < endY; blockY++)
                             {
@@ -208,18 +207,19 @@ namespace ExternalLCDIntegration
                     pixelCount = 0;
                     for (var x = screenWidth - VerticalBlockX; x < screenWidth; x++)
                     {
-                        var startY = VerticalBlockY * x;
-                        var endY = startY + VerticalBlockY;
-                        for (var blockY = startY; blockY < endY; blockY++)
+                        var startY = VerticalBlockY * _verticalLedCountRight - 1;
+                        for (var blockY = startY; blockY < screenHeight; blockY++)
                         {
                             for (var color = 0; color < 3; color++)
                             {
                                 var idx = blockY * stride + x * bppModifier + color;
                                 totals[color] += p[idx];
                             }
+
                             pixelCount++;
                         }
                     }
+
                     array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
                     totals.CleanArray();
                     #endregion
@@ -260,9 +260,9 @@ namespace ExternalLCDIntegration
                             }
                             pixelCount++;
                         }
-                        array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
-                        totals.CleanArray();
                     }
+                    array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
+                    totals.CleanArray();
                     #endregion
                 }
 
@@ -298,10 +298,12 @@ namespace ExternalLCDIntegration
         {
             try
             {
+                /*
                 _horizontalLedCountTop = int.Parse(HorizontalLedCountTop.Text);
                 _horizontalLedCountBottom = int.Parse(HorizontalLedCountBottom.Text);
                 _verticalLedCountLeft = int.Parse(VerticalLedCountLeft.Text);
                 _verticalLedCountRight = int.Parse(VerticalLedCountRight.Text);
+                */
                 return true;
             }
             catch (Exception)

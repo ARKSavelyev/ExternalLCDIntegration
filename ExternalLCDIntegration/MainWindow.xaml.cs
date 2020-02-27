@@ -70,7 +70,7 @@ namespace ExternalLCDIntegration
             var sw = Stopwatch.StartNew();
             while (sw.ElapsedMilliseconds < milliseconds)
             {
-                Thread.Sleep(100);
+                Thread.Sleep(25);
             }
         }
         private void GetAverageColor()
@@ -86,34 +86,30 @@ namespace ExternalLCDIntegration
             {
                 var totals = new long[] { 0, 0, 0 };
                 var array = ArrayService.CreateByteArray(_horizontalLedCountTop,_horizontalLedCountBottom, _verticalLedCountLeft, _verticalLedCountRight);
-                var count = 0;
+                var ledCount = 0;
                 WaitMilliseconds(500);
                 var screenBitmap = ScreenService.GetScreenBitmap(screenWidth, screenHeight, size);
                 var format = screenBitmap.PixelFormat;
-                var bppModifier = format == System.Drawing.Imaging.PixelFormat.Format24bppRgb ? 3 : 4; // cutting corners, will fail on anything else but 32 and 24 bit images
+                var bppModifier = format == PixelFormat.Format24bppRgb ? 3 : 4; // cutting corners, will fail on anything else but 32 and 24 bit images
                 var sourceData = screenBitmap.LockBits(new Rectangle(0, 0, screenWidth, screenHeight), ImageLockMode.ReadOnly,
                     format);
                 var stride = sourceData.Stride;
                 var scan = sourceData.Scan0;
-
-                var verticalTopBlockX = screenWidth / _horizontalLedCountTop;
-                var verticalBlockY = screenHeight / 4;
-
-
-
                 unsafe
                 {
                     var p = (byte*)(void*)scan;
                     var pixelCount = 0;
 
-
                     #region HorizonalTop
+
+                    var horizonalBlockX = screenWidth / _horizontalLedCountTop;
+                    var horizontalBlockY = screenHeight / 5;
                     for (var x = 0; x < _horizontalLedCountTop-1; x++)
                     {
-                        for (var y = 0; y < verticalBlockY; y++)
+                        for (var y = 0; y < horizontalBlockY; y++)
                         {
-                            var startX = verticalTopBlockX*x;
-                            var endX = startX + verticalTopBlockX;
+                            var startX = horizonalBlockX*x;
+                            var endX = startX + horizonalBlockX;
                             for (var blockX = startX; blockX < endX; blockX++)
                             {
                                 for (var color = 0; color < 3; color++)
@@ -124,13 +120,13 @@ namespace ExternalLCDIntegration
                                 pixelCount++;
                             }
                         }
-                        AddLedColourToArray(totals, array, pixelCount, count++);
+                        array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
                         totals.CleanArray();
                     }
                     pixelCount = 0;
-                    for (var y = 0; y < verticalBlockY; y++)
+                    for (var y = 0; y < horizontalBlockY; y++)
                     {
-                        var startX = verticalTopBlockX * _horizontalLedCountTop - 1;
+                        var startX = horizonalBlockX * _horizontalLedCountTop - 1;
                         for (var blockX = startX; blockX < screenWidth; blockX++)
                         {
                             for (var color = 0; color < 3; color++)
@@ -140,17 +136,136 @@ namespace ExternalLCDIntegration
                             }
                             pixelCount++;
                         }
-                        AddLedColourToArray(totals, array, pixelCount, count++);
+                        array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
                         totals.CleanArray();
                     }
                     #endregion
 
                     #region VerticalLeft
-                    
+
+                    var VerticalBlockY = screenHeight / _verticalLedCountLeft;
+                    var VerticalBlockX = screenWidth / 5;
+                    for (var y = 0; y < _verticalLedCountLeft-1; y++)
+                    {
+                        for (var x = 0; x < VerticalBlockX; x++)
+                        {
+                            var startY = VerticalBlockY * x;
+                            var endY = startY + VerticalBlockY;
+                            for (var blockY = startY; blockY < endY; blockY++)
+                            {
+                                for (var color = 0; color < 3; color++)
+                                {
+                                    var idx = blockY * stride + x * bppModifier + color;
+                                    totals[color] += p[idx];
+                                }
+                                pixelCount++;
+                            }
+                        }
+                        array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
+                        totals.CleanArray();
+                    }
+                    pixelCount = 0;
+                    for (var x = 0; x < VerticalBlockX; x++)
+                    {
+                        var startY = VerticalBlockY * x;
+                        var endY = startY + VerticalBlockY;
+                        for (var blockY = startY; blockY < endY; blockY++)
+                        {
+                            for (var color = 0; color < 3; color++)
+                            {
+                                var idx = blockY * stride + x * bppModifier + color;
+                                totals[color] += p[idx];
+                            }
+                            pixelCount++;
+                        }
+                    }
+                    array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
+                    totals.CleanArray();
                     #endregion
 
+                    #region VerticalRight
+
+                    VerticalBlockY = screenHeight / _verticalLedCountRight;
+                    for (var y = 0; y < _verticalLedCountRight - 1; y++)
+                    {
+                        for (var x = screenWidth- VerticalBlockX; x < screenWidth; x++)
+                        {
+                            var startY = VerticalBlockY * x;
+                            var endY = startY + VerticalBlockY;
+                            for (var blockY = startY; blockY < endY; blockY++)
+                            {
+                                for (var color = 0; color < 3; color++)
+                                {
+                                    var idx = blockY * stride + x * bppModifier + color;
+                                    totals[color] += p[idx];
+                                }
+                                pixelCount++;
+                            }
+                        }
+                        array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
+                        totals.CleanArray();
+                    }
+                    pixelCount = 0;
+                    for (var x = screenWidth - VerticalBlockX; x < screenWidth; x++)
+                    {
+                        var startY = VerticalBlockY * x;
+                        var endY = startY + VerticalBlockY;
+                        for (var blockY = startY; blockY < endY; blockY++)
+                        {
+                            for (var color = 0; color < 3; color++)
+                            {
+                                var idx = blockY * stride + x * bppModifier + color;
+                                totals[color] += p[idx];
+                            }
+                            pixelCount++;
+                        }
+                    }
+                    array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
+                    totals.CleanArray();
+                    #endregion
+
+                    #region HorizonalBottom
+
+                    horizonalBlockX = screenWidth / _horizontalLedCountBottom;
+                    horizontalBlockY = screenHeight / 5;
+                    for (var x = 0; x < _horizontalLedCountBottom - 1; x++)
+                    {
+                        for (var y = screenHeight-horizontalBlockY; y < screenHeight; y++)
+                        {
+                            var startX = horizonalBlockX * x;
+                            var endX = startX + horizonalBlockX;
+                            for (var blockX = startX; blockX < endX; blockX++)
+                            {
+                                for (var color = 0; color < 3; color++)
+                                {
+                                    var idx = y * stride + blockX * bppModifier + color;
+                                    totals[color] += p[idx];
+                                }
+                                pixelCount++;
+                            }
+                        }
+                        array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
+                        totals.CleanArray();
+                    }
+                    pixelCount = 0;
+                    for (var y = 0; y < horizontalBlockY; y++)
+                    {
+                        var startX = horizonalBlockX * _horizontalLedCountTop - 1;
+                        for (var blockX = startX; blockX < screenWidth; blockX++)
+                        {
+                            for (var color = 0; color < 3; color++)
+                            {
+                                var idx = y * stride + blockX * bppModifier + color;
+                                totals[color] += p[idx];
+                            }
+                            pixelCount++;
+                        }
+                        array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
+                        totals.CleanArray();
+                    }
+                    #endregion
                 }
-                
+
                 SendDataToSerialPort(array, array.Length);
                 //Dispatcher.BeginInvoke(new Action(() => { PrintRGB(avgB, avgG, avgR); }));
             } while (_isRunning);

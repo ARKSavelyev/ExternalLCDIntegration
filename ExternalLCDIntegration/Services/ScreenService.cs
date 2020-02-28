@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 using System.Windows;
+using ExternalLCDIntegration.Extensions;
+using ExternalLCDIntegration.Models;
 using Point = System.Drawing.Point;
 using Size = System.Drawing.Size;
 
@@ -38,5 +40,68 @@ namespace ExternalLCDIntegration.Services
             output = $"R: {avrR.ToString()} G: {avrG.ToString()} B: {avrB.ToString()}";
         }
 
+        public static byte[] GetSideLEDs(LedReadingRequest requestModel)
+        {
+            var totals = new long[] { 0, 0, 0 };
+            var primaryDimensionBlock = requestModel.PrimaryDimension / requestModel.SideLedCount;
+            var secondaryDimensionBlock = requestModel.SecondaryDimension / 5;
+            var startPixel = 0;
+            var EndPixel = secondaryDimensionBlock;
+            if (!requestModel.StartFromZero)
+            {
+                startPixel = requestModel.SecondaryDimension - secondaryDimensionBlock;
+                EndPixel = requestModel.SecondaryDimension;
+            }
+                
+            unsafe
+            {
+                var p = (byte*)(void*)requestModel.ScreenPointer;
+                var pixelCount = 0;
+                for (var primaryCount = 0; primaryCount < requestModel.SideLedCount - 1; primaryCount++)
+                {
+                    for (var secondaryCount = startPixel; secondaryCount < EndPixel; secondaryCount++)
+                    {
+                        var startX = primaryDimensionBlock * primaryCount;
+                        var endX = startX + primaryDimensionBlock;
+                        for (var blockX = startX; blockX < endX; blockX++)
+                        {
+                            for (var color = 0; color < 3; color++)
+                            {
+                                var idx = secondaryCount * requestModel.Stride + blockX * requestModel.BPPModifier + color;
+                                totals[color] += p[idx];
+                            }
+                            pixelCount++;
+                        }
+                    }
+                    requestModel.ColourArray = AddLedColourToArray(totals, requestModel.ColourArray, pixelCount, requestModel.CurrentLedCount++);
+                    totals.CleanArray();
+                }
+                pixelCount = 0;
+                for (var secondaryCount = startPixel; secondaryCount < EndPixel; secondaryCount++)
+                {
+                    var startX = primaryDimensionBlock * requestModel.SideLedCount - 1;
+                    for (var blockX = startX; blockX < requestModel.PrimaryDimension; blockX++)
+                    {
+                        for (var color = 0; color < 3; color++)
+                        {
+                            var idx = secondaryCount * requestModel.Stride + blockX * requestModel.BPPModifier + color;
+                            totals[color] += p[idx];
+                        }
+
+                        pixelCount++;
+                    }
+                }
+                requestModel.ColourArray = AddLedColourToArray(totals, requestModel.ColourArray, pixelCount, requestModel.CurrentLedCount++);
+                return requestModel.ColourArray;
+            }
+        }
+
+        private static byte[] AddLedColourToArray(long[] colourArray, byte[] outputArray, int pixelCount, int currentLedCount)
+        {
+            var avgB = ScreenService.GetAverageColour(colourArray[0], pixelCount);
+            var avgG = ScreenService.GetAverageColour(colourArray[1], pixelCount);
+            var avgR = ScreenService.GetAverageColour(colourArray[2], pixelCount);
+            return ArrayService.AddToByteArray(outputArray, avgR, avgG, avgB, currentLedCount);
+        }
     }
 }

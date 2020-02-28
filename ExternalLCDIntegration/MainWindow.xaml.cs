@@ -6,6 +6,7 @@ using System.IO.Ports;
 using System.Threading;
 using System.Windows;
 using ExternalLCDIntegration.Extensions;
+using ExternalLCDIntegration.Models;
 using ExternalLCDIntegration.Services;
 using Rectangle = System.Drawing.Rectangle;
 using Size = System.Drawing.Size;
@@ -95,188 +96,63 @@ namespace ExternalLCDIntegration
                     format);
                 var stride = sourceData.Stride;
                 var scan = sourceData.Scan0;
-                unsafe
+  
+                var requestModel = new LedReadingRequest
                 {
-                    var p = (byte*)(void*)scan;
-                    var pixelCount = 0;
+                    PrimaryDimension = screenHeight,
+                    SecondaryDimension = screenWidth,
+                    SideLedCount = _verticalLedCountLeft,
+                    CurrentLedCount = ledCount,
+                    ScreenPointer = scan,
+                    StartFromZero = true,
+                    BPPModifier = bppModifier,
+                    Stride = stride,
+                    ColourArray = array
+                };
 
-                    #region HorizonalTop
+                #region VerticalLeft
 
-                    var horizonalBlockX = screenWidth / _horizontalLedCountTop;
-                    var horizontalBlockY = screenHeight / 5;
-                    for (var x = 0; x < _horizontalLedCountTop-1; x++)
-                    {
-                        for (var y = 0; y < horizontalBlockY; y++)
-                        {
-                            var startX = horizonalBlockX*x;
-                            var endX = startX + horizonalBlockX;
-                            for (var blockX = startX; blockX < endX; blockX++)
-                            {
-                                for (var color = 0; color < 3; color++)
-                                {
-                                    var idx = y * stride + blockX * bppModifier + color;
-                                    totals[color] += p[idx];
-                                }
-                                pixelCount++;
-                            }
-                        }
-                        array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
-                        totals.CleanArray();
-                    }
-                    pixelCount = 0;
-                    for (var y = 0; y < horizontalBlockY; y++)
-                    {
-                        var startX = horizonalBlockX * _horizontalLedCountTop - 1;
-                        for (var blockX = startX; blockX < screenWidth; blockX++)
-                        {
-                            for (var color = 0; color < 3; color++)
-                            {
-                                var idx = y * stride + blockX * bppModifier + color;
-                                totals[color] += p[idx];
-                            }
-                            pixelCount++;
-                        }
-                    }
-                    array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
-                    totals.CleanArray();
-                    #endregion
+                array = ScreenService.GetSideLEDs(requestModel);
+                ledCount += _verticalLedCountLeft;
+                #endregion
 
-                    #region VerticalLeft
+                #region HorizonalTop
+                requestModel.PrimaryDimension = screenWidth;
+                requestModel.SecondaryDimension = screenHeight;
+                requestModel.CurrentLedCount = ledCount;
+                requestModel.SideLedCount = _horizontalLedCountTop;
+                requestModel.ColourArray = array;
+                array = ScreenService.GetSideLEDs(requestModel);
+                ledCount += _horizontalLedCountTop;
+                #endregion
 
-                    var VerticalBlockY = screenHeight / _verticalLedCountLeft;
-                    var VerticalBlockX = screenWidth / 5;
-                    for (var y = 0; y < _verticalLedCountLeft-1; y++)
-                    {
-                        for (var x = 0; x < VerticalBlockX; x++)
-                        {
-                            var startY = VerticalBlockY * y;
-                            var endY = startY + VerticalBlockY;
-                            for (var blockY = startY; blockY < endY; blockY++)
-                            {
-                                for (var color = 0; color < 3; color++)
-                                {
-                                    var idx = blockY * stride + x * bppModifier + color;
-                                    totals[color] += p[idx];
-                                }
-                                pixelCount++;
-                            }
-                        }
-                        array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
-                        totals.CleanArray();
-                    }
-                    pixelCount = 0;
-                    for (var x = 0; x < VerticalBlockX; x++)
-                    {
-                        var startY = VerticalBlockY * _verticalLedCountLeft - 1;
-                        for (var blockY = startY; blockY < screenHeight; blockY++)
-                        {
-                            for (var color = 0; color < 3; color++)
-                            {
-                                var idx = blockY * stride + x * bppModifier + color;
-                                totals[color] += p[idx];
-                            }
-                            pixelCount++;
-                        }
-                    }
-                    array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
-                    totals.CleanArray();
-                    #endregion
+                #region VerticalRight
 
-                    #region VerticalRight
+                requestModel.PrimaryDimension = screenHeight;
+                requestModel.SecondaryDimension = screenWidth;
+                requestModel.CurrentLedCount = ledCount;
+                requestModel.SideLedCount = _verticalLedCountRight;
+                requestModel.ColourArray = array;
+                requestModel.StartFromZero = false;
+                array = ScreenService.GetSideLEDs(requestModel);
+                ledCount += _verticalLedCountRight;
 
-                    VerticalBlockY = screenHeight / _verticalLedCountRight;
-                    for (var y = 0; y < _verticalLedCountRight - 1; y++)
-                    {
-                        for (var x = screenWidth- VerticalBlockX; x < screenWidth; x++)
-                        {
-                            var startY = VerticalBlockY * y;
-                            var endY = startY + VerticalBlockY;
-                            for (var blockY = startY; blockY < endY; blockY++)
-                            {
-                                for (var color = 0; color < 3; color++)
-                                {
-                                    var idx = blockY * stride + x * bppModifier + color;
-                                    totals[color] += p[idx];
-                                }
-                                pixelCount++;
-                            }
-                        }
-                        array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
-                        totals.CleanArray();
-                    }
-                    pixelCount = 0;
-                    for (var x = screenWidth - VerticalBlockX; x < screenWidth; x++)
-                    {
-                        var startY = VerticalBlockY * _verticalLedCountRight - 1;
-                        for (var blockY = startY; blockY < screenHeight; blockY++)
-                        {
-                            for (var color = 0; color < 3; color++)
-                            {
-                                var idx = blockY * stride + x * bppModifier + color;
-                                totals[color] += p[idx];
-                            }
+                #endregion
 
-                            pixelCount++;
-                        }
-                    }
+                #region HorizonalBottom
+                requestModel.PrimaryDimension = screenWidth;
+                requestModel.SecondaryDimension = screenHeight;
+                requestModel.CurrentLedCount = ledCount;
+                requestModel.SideLedCount = _horizontalLedCountBottom;
+                requestModel.ColourArray = array;
+                array = ScreenService.GetSideLEDs(requestModel);
+                ledCount += _horizontalLedCountTop;
 
-                    array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
-                    totals.CleanArray();
-                    #endregion
-
-                    #region HorizonalBottom
-
-                    horizonalBlockX = screenWidth / _horizontalLedCountBottom;
-                    horizontalBlockY = screenHeight / 5;
-                    for (var x = 0; x < _horizontalLedCountBottom - 1; x++)
-                    {
-                        for (var y = screenHeight-horizontalBlockY; y < screenHeight; y++)
-                        {
-                            var startX = horizonalBlockX * x;
-                            var endX = startX + horizonalBlockX;
-                            for (var blockX = startX; blockX < endX; blockX++)
-                            {
-                                for (var color = 0; color < 3; color++)
-                                {
-                                    var idx = y * stride + blockX * bppModifier + color;
-                                    totals[color] += p[idx];
-                                }
-                                pixelCount++;
-                            }
-                        }
-                        array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
-                        totals.CleanArray();
-                    }
-                    pixelCount = 0;
-                    for (var y = 0; y < horizontalBlockY; y++)
-                    {
-                        var startX = horizonalBlockX * _horizontalLedCountTop - 1;
-                        for (var blockX = startX; blockX < screenWidth; blockX++)
-                        {
-                            for (var color = 0; color < 3; color++)
-                            {
-                                var idx = y * stride + blockX * bppModifier + color;
-                                totals[color] += p[idx];
-                            }
-                            pixelCount++;
-                        }
-                    }
-                    array = AddLedColourToArray(totals, array, pixelCount, ledCount++);
-                    totals.CleanArray();
-                    #endregion
-                }
+                #endregion
 
                 SendDataToSerialPort(array, array.Length);
                 //Dispatcher.BeginInvoke(new Action(() => { PrintRGB(avgB, avgG, avgR); }));
             } while (_isRunning);
-        }
-
-        private byte[] AddLedColourToArray(long[] colourArray, byte[] outputArray, int pixelCount, int currentLedCount)
-        {
-            var avgB = ScreenService.GetAverageColour(colourArray[0], pixelCount);
-            var avgG = ScreenService.GetAverageColour(colourArray[1], pixelCount);
-            var avgR = ScreenService.GetAverageColour(colourArray[2], pixelCount);
-            return ArrayService.AddToByteArray(outputArray, avgR, avgG, avgB, currentLedCount);
         }
 
         private void BackgroundWorkerOnDoWork(object sender, DoWorkEventArgs e)

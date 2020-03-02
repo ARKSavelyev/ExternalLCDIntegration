@@ -113,10 +113,10 @@ namespace ExternalLCDIntegration
                 var stride = sourceData.Stride;
                 var scan = sourceData.Scan0;
 
-                var requestModel = new LedReadingRequest
+                var requestModel = new SideLedReadingRequest
                 {
-                    PrimaryDimension = screenHeight,
-                    SecondaryDimension = screenWidth,
+                    X = screenHeight,
+                    Y = screenWidth,
                     SideLedCount = _verticalLedCountLeft,
                     CurrentLedCount = ledCount,
                     ScreenPointer = scan,
@@ -135,8 +135,8 @@ namespace ExternalLCDIntegration
 
                 #region HorizonalTop
 
-                requestModel.PrimaryDimension = screenWidth;
-                requestModel.SecondaryDimension = screenHeight;
+                requestModel.X = screenWidth;
+                requestModel.Y = screenHeight;
                 requestModel.CurrentLedCount = ledCount;
                 requestModel.SideLedCount = _horizontalLedCountTop;
                 requestModel.ColourArray = array;
@@ -147,8 +147,8 @@ namespace ExternalLCDIntegration
 
                 #region VerticalRight
 
-                requestModel.PrimaryDimension = screenHeight;
-                requestModel.SecondaryDimension = screenWidth;
+                requestModel.X = screenHeight;
+                requestModel.Y = screenWidth;
                 requestModel.CurrentLedCount = ledCount;
                 requestModel.SideLedCount = _verticalLedCountRight;
                 requestModel.ColourArray = array;
@@ -160,8 +160,8 @@ namespace ExternalLCDIntegration
 
                 #region HorizonalBottom
 
-                requestModel.PrimaryDimension = screenWidth;
-                requestModel.SecondaryDimension = screenHeight;
+                requestModel.X = screenWidth;
+                requestModel.Y = screenHeight;
                 requestModel.CurrentLedCount = ledCount;
                 requestModel.SideLedCount = _horizontalLedCountBottom;
                 requestModel.ColourArray = array;

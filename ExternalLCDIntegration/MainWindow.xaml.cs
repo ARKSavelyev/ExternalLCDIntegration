@@ -85,70 +85,79 @@ namespace ExternalLCDIntegration
             var size = new Size(screenWidth, screenHeight);
             do
             {
-                var totals = new long[] { 0, 0, 0 };
                 var array = ArrayService.CreateByteArray(_horizontalLedCountTop,_horizontalLedCountBottom, _verticalLedCountLeft, _verticalLedCountRight);
                 var ledCount = 0;
                 WaitMilliseconds(500);
-                var screenBitmap = ScreenService.GetScreenBitmap(screenWidth, screenHeight, size);
-                var format = screenBitmap.PixelFormat;
-                var bppModifier = format == PixelFormat.Format24bppRgb ? 3 : 4; // cutting corners, will fail on anything else but 32 and 24 bit images
-                var sourceData = screenBitmap.LockBits(new Rectangle(0, 0, screenWidth, screenHeight), ImageLockMode.ReadOnly,
-                    format);
-                var stride = sourceData.Stride;
-                var scan = sourceData.Scan0;
-  
-                var requestModel = new LedReadingRequest
+                using (var screenBitmap = ScreenService.GetScreenBitmap(screenWidth, screenHeight, size))
                 {
-                    PrimaryDimension = screenHeight,
-                    SecondaryDimension = screenWidth,
-                    SideLedCount = _verticalLedCountLeft,
-                    CurrentLedCount = ledCount,
-                    ScreenPointer = scan,
-                    StartFromZero = true,
-                    BPPModifier = bppModifier,
-                    Stride = stride,
-                    ColourArray = array
-                };
+                    var format = screenBitmap.PixelFormat;
+                    var bppModifier =
+                        format == PixelFormat.Format24bppRgb
+                            ? 3
+                            : 4; // cutting corners, will fail on anything else but 32 and 24 bit images
+                    var sourceData = screenBitmap.LockBits(new Rectangle(0, 0, screenWidth, screenHeight),
+                        ImageLockMode.ReadOnly,
+                        format);
+                    var stride = sourceData.Stride;
+                    var scan = sourceData.Scan0;
 
-                #region VerticalLeft
+                    var requestModel = new LedReadingRequest
+                    {
+                        PrimaryDimension = screenHeight,
+                        SecondaryDimension = screenWidth,
+                        SideLedCount = _verticalLedCountLeft,
+                        CurrentLedCount = ledCount,
+                        ScreenPointer = scan,
+                        StartFromZero = true,
+                        BPPModifier = bppModifier,
+                        Stride = stride,
+                        ColourArray = array
+                    };
 
-                array = ScreenService.GetSideLEDs(requestModel);
-                ledCount += _verticalLedCountLeft;
-                #endregion
+                    #region VerticalLeft
 
-                #region HorizonalTop
-                requestModel.PrimaryDimension = screenWidth;
-                requestModel.SecondaryDimension = screenHeight;
-                requestModel.CurrentLedCount = ledCount;
-                requestModel.SideLedCount = _horizontalLedCountTop;
-                requestModel.ColourArray = array;
-                array = ScreenService.GetSideLEDs(requestModel);
-                ledCount += _horizontalLedCountTop;
-                #endregion
+                    array = ScreenService.GetSideLEDs(requestModel);
+                    ledCount += _verticalLedCountLeft;
 
-                #region VerticalRight
+                    #endregion
 
-                requestModel.PrimaryDimension = screenHeight;
-                requestModel.SecondaryDimension = screenWidth;
-                requestModel.CurrentLedCount = ledCount;
-                requestModel.SideLedCount = _verticalLedCountRight;
-                requestModel.ColourArray = array;
-                requestModel.StartFromZero = false;
-                array = ScreenService.GetSideLEDs(requestModel);
-                ledCount += _verticalLedCountRight;
+                    #region HorizonalTop
 
-                #endregion
+                    requestModel.PrimaryDimension = screenWidth;
+                    requestModel.SecondaryDimension = screenHeight;
+                    requestModel.CurrentLedCount = ledCount;
+                    requestModel.SideLedCount = _horizontalLedCountTop;
+                    requestModel.ColourArray = array;
+                    array = ScreenService.GetSideLEDs(requestModel);
+                    ledCount += _horizontalLedCountTop;
 
-                #region HorizonalBottom
-                requestModel.PrimaryDimension = screenWidth;
-                requestModel.SecondaryDimension = screenHeight;
-                requestModel.CurrentLedCount = ledCount;
-                requestModel.SideLedCount = _horizontalLedCountBottom;
-                requestModel.ColourArray = array;
-                array = ScreenService.GetSideLEDs(requestModel);
-                ledCount += _horizontalLedCountTop;
+                    #endregion
 
-                #endregion
+                    #region VerticalRight
+
+                    requestModel.PrimaryDimension = screenHeight;
+                    requestModel.SecondaryDimension = screenWidth;
+                    requestModel.CurrentLedCount = ledCount;
+                    requestModel.SideLedCount = _verticalLedCountRight;
+                    requestModel.ColourArray = array;
+                    requestModel.StartFromZero = false;
+                    array = ScreenService.GetSideLEDs(requestModel);
+                    ledCount += _verticalLedCountRight;
+
+                    #endregion
+
+                    #region HorizonalBottom
+
+                    requestModel.PrimaryDimension = screenWidth;
+                    requestModel.SecondaryDimension = screenHeight;
+                    requestModel.CurrentLedCount = ledCount;
+                    requestModel.SideLedCount = _horizontalLedCountBottom;
+                    requestModel.ColourArray = array;
+                    array = ScreenService.GetSideLEDs(requestModel);
+                    ledCount += _horizontalLedCountTop;
+
+                    #endregion
+                }
 
                 SendDataToSerialPort(array, array.Length);
                 //Dispatcher.BeginInvoke(new Action(() => { PrintRGB(avgB, avgG, avgR); }));
@@ -196,10 +205,9 @@ namespace ExternalLCDIntegration
                 if (comList.SelectedItem == null) MessageBox.Show(_portMessage);
                 else
                 {
-                    String comPortName = comList.SelectedItem.ToString();
-                    _port = new SerialPort(comPortName, 115200, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.One);
-                    _port.ReadTimeout = 500;
-                    _port.WriteTimeout = 500;
+                    var comPortName = comList.SelectedItem.ToString();
+                    _port = new SerialPort(comPortName, 115200, System.IO.Ports.Parity.None, 8,
+                        System.IO.Ports.StopBits.One) {ReadTimeout = 500, WriteTimeout = 500};
                     _port.Open();
                     ConnectingBT.Content = "Disconnect";
                 }

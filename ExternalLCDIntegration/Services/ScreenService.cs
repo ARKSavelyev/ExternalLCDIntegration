@@ -15,12 +15,20 @@ namespace ExternalLCDIntegration.Services
 
         public static Bitmap GetScreenBitmap(int screenWidth, int screenHeight, Size size)
         {
-            var screenBitmap = new Bitmap(screenWidth, screenHeight);
+           return CopyFromTheScreen(CreateBitmap(screenWidth, screenHeight), size);
+        }
+
+        public static Bitmap CreateBitmap(int screenWidth, int screenHeight)
+        {
+            return new Bitmap(screenWidth, screenHeight);
+        }
+
+        public static Bitmap CopyFromTheScreen(Bitmap screenBitmap, Size size)
+        {
             using (var g = Graphics.FromImage(screenBitmap))
             {
                 g.CopyFromScreen(Point.Empty, Point.Empty, size);
             }
-
             return screenBitmap;
         }
 

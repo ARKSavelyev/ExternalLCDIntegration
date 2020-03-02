@@ -48,17 +48,24 @@ namespace ExternalLCDIntegration.Services
             output = $"R: {avrR.ToString()} G: {avrG.ToString()} B: {avrB.ToString()}";
         }
 
-        public static byte[] GetSideLEDs(LedReadingRequest requestModel)
+
+        
+        public static byte[] GetSideLEDUpdated(SideLedReadingRequest request)
+        {
+            return null;
+        }
+
+        public static byte[] GetSideLEDs(SideLedReadingRequest requestModel)
         {
             var totals = new long[] { 0, 0, 0 };
-            var primaryDimensionBlock = requestModel.PrimaryDimension / requestModel.SideLedCount;
-            var secondaryDimensionBlock = requestModel.SecondaryDimension / 5;
+            var primaryDimensionBlock = requestModel.X / requestModel.SideLedCount;
+            var secondaryDimensionBlock = requestModel.Y / 5;
             var startPixel = 0;
             var EndPixel = secondaryDimensionBlock;
             if (!requestModel.StartFromZero)
             {
-                startPixel = requestModel.SecondaryDimension - secondaryDimensionBlock;
-                EndPixel = requestModel.SecondaryDimension;
+                startPixel = requestModel.Y - secondaryDimensionBlock;
+                EndPixel = requestModel.Y;
             }
                 
             unsafe
@@ -88,7 +95,7 @@ namespace ExternalLCDIntegration.Services
                 for (var secondaryCount = startPixel; secondaryCount < EndPixel; secondaryCount++)
                 {
                     var startX = primaryDimensionBlock * requestModel.SideLedCount - 1;
-                    for (var blockX = startX; blockX < requestModel.PrimaryDimension; blockX++)
+                    for (var blockX = startX; blockX < requestModel.X; blockX++)
                     {
                         for (var color = 0; color < 3; color++)
                         {

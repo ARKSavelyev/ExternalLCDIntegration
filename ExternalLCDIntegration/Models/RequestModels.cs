@@ -4,10 +4,10 @@ using System.Text;
 
 namespace ExternalLCDIntegration.Models
 {
-    public class LedReadingRequest
+    public class SideLedReadingRequest
     {
-        public int PrimaryDimension { get; set; }
-        public int SecondaryDimension { get; set; }
+        public int X { get; set; }//Primary Dimension
+        public int Y { get; set; }//Secondary Dimension
         public int SideLedCount { get; set; }
         public int CurrentLedCount { get; set; }
         public int Stride { get; set; }
@@ -15,6 +15,8 @@ namespace ExternalLCDIntegration.Models
         public IntPtr ScreenPointer { get; set; }
         public byte[] ColourArray { get; set; }
         public bool StartFromZero { get; set; }
-        
+
+        public bool isHorizontal { get; set; }
+
     }
 }

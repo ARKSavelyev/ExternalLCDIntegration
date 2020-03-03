@@ -98,7 +98,6 @@ namespace ExternalLCDIntegration
             var screenBitmap = ScreenService.CreateBitmap(screenWidth, screenHeight);
             do
             {
-                var array = ArrayService.CreateByteArray(_horizontalLedCountTop,_horizontalLedCountBottom, _verticalLedCountLeft, _verticalLedCountRight);
                 var ledCount = 0;
                 WaitMilliseconds(100);
                 screenBitmap = ScreenService.CopyFromTheScreen(screenBitmap, size);
@@ -115,63 +114,54 @@ namespace ExternalLCDIntegration
 
                 var requestModel = new SideLedReadingRequest
                 {
-                    X = screenHeight,
-                    Y = screenWidth,
+                    Y = screenHeight,
+                    X = screenWidth,
+                    Depth = 5,
                     SideLedCount = _verticalLedCountLeft,
                     CurrentLedCount = ledCount,
                     ScreenPointer = scan,
                     StartFromZero = true,
                     BPPModifier = bppModifier,
                     Stride = stride,
-                    ColourArray = array
+                    ColourArray = ArrayService.CreateByteArray(_horizontalLedCountTop, _horizontalLedCountBottom, _verticalLedCountLeft, _verticalLedCountRight)
                 };
 
                 #region VerticalLeft
 
-                array = ScreenService.GetSideLEDs(requestModel);
+                requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
                 ledCount += _verticalLedCountLeft;
 
                 #endregion
 
                 #region HorizonalTop
 
-                requestModel.X = screenWidth;
-                requestModel.Y = screenHeight;
                 requestModel.CurrentLedCount = ledCount;
                 requestModel.SideLedCount = _horizontalLedCountTop;
-                requestModel.ColourArray = array;
-                array = ScreenService.GetSideLEDs(requestModel);
+                requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
                 ledCount += _horizontalLedCountTop;
 
                 #endregion
 
                 #region VerticalRight
 
-                requestModel.X = screenHeight;
-                requestModel.Y = screenWidth;
                 requestModel.CurrentLedCount = ledCount;
                 requestModel.SideLedCount = _verticalLedCountRight;
-                requestModel.ColourArray = array;
                 requestModel.StartFromZero = false;
-                array = ScreenService.GetSideLEDs(requestModel);
+                requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
                 ledCount += _verticalLedCountRight;
 
                 #endregion
 
                 #region HorizonalBottom
 
-                requestModel.X = screenWidth;
-                requestModel.Y = screenHeight;
                 requestModel.CurrentLedCount = ledCount;
                 requestModel.SideLedCount = _horizontalLedCountBottom;
-                requestModel.ColourArray = array;
-                array = ScreenService.GetSideLEDs(requestModel);
-                ledCount += _horizontalLedCountTop;
+                requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
 
                 #endregion
 
                 screenBitmap.UnlockBits(sourceData);
-                SendDataToSerialPort(array, array.Length);
+                SendDataToSerialPort(requestModel.ColourArray, requestModel.ColourArray.Length);
                 //Dispatcher.BeginInvoke(new Action(() => { PrintRGB(avgB, avgG, avgR); }));
             } while (_isRunning);
         }

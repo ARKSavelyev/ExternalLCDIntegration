@@ -45,9 +45,9 @@
         </Button>
         <Label x:Name="OutputLabel" Content="Output:" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14" FontWeight="Bold" Height="34" Width="64" Grid.Row="2" Margin="53,0,0,0"/>
         <Label x:Name="LedCountLabel" Content="Led Count(V1,V2, H1, H2)" HorizontalAlignment="Center" Grid.Row="3" VerticalAlignment="Center" FontSize="10" FontWeight="Bold" RenderTransformOrigin="0.36,0.232" Height="35" Width="134"/>
-        <TextBox x:Name="HorizontalLedCountTop" Grid.Column="1" HorizontalAlignment="Left" Margin="39,19,0,0" Grid.Row="3" Text="0" TextWrapping="Wrap" VerticalAlignment="Top" Width="24" Height="18"/>
-        <TextBox x:Name="VerticalLedCountLeft" Grid.Column="1" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="3" Text="" TextWrapping="Wrap" VerticalAlignment="Center" Width="24" Height="18"/>
-        <TextBox x:Name="HorizontalLedCountBottom" Grid.Column="1" HorizontalAlignment="Left" Margin="39,52,0,0" Grid.Row="3" Text="" TextWrapping="Wrap" VerticalAlignment="Top" Width="24" Height="18"/>
-        <TextBox x:Name="VerticalLedCountRight" Grid.Column="1" HorizontalAlignment="Left" Margin="68,0,0,0" Grid.Row="3" Text="" TextWrapping="Wrap" VerticalAlignment="Center" Width="24" Height="18"/>
+        <TextBox x:Name="HorizontalLedCountTop" Grid.Column="1" HorizontalAlignment="Left" Margin="39,19,0,0" Grid.Row="3" Text="5" TextWrapping="Wrap" VerticalAlignment="Top" Width="24" Height="18"/>
+        <TextBox x:Name="VerticalLedCountLeft" Grid.Column="1" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="3" Text="4" TextWrapping="Wrap" VerticalAlignment="Center" Width="24" Height="18"/>
+        <TextBox x:Name="HorizontalLedCountBottom" Grid.Column="1" HorizontalAlignment="Left" Margin="39,52,0,0" Grid.Row="3" Text="6" TextWrapping="Wrap" VerticalAlignment="Top" Width="24" Height="18"/>
+        <TextBox x:Name="VerticalLedCountRight" Grid.Column="1" HorizontalAlignment="Left" Margin="68,0,0,0" Grid.Row="3" Text="7" TextWrapping="Wrap" VerticalAlignment="Center" Width="24" Height="18"/>
     </Grid>
 </Window>

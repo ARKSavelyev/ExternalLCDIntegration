@@ -43,80 +43,121 @@ namespace ExternalLCDIntegration.Services
             return (byte)(total / count);
         }
 
-        public static void PrintRGB(ref string output,int avrB, int avrG, int avrR)
+        public static string PrintRGB(ref string output,int avrB, int avrG, int avrR)
         {
-            output = $"R: {avrR.ToString()} G: {avrG.ToString()} B: {avrB.ToString()}";
+            return $"R: {avrR.ToString()} G: {avrG.ToString()} B: {avrB.ToString()}";
         }
 
-
-        
-        public static byte[] GetSideLEDUpdated(SideLedReadingRequest request)
-        {
-            return null;
-        }
-
-        public static byte[] GetSideLEDs(SideLedReadingRequest requestModel)
+        private static AverageColour GetSectionLED(ScreenSectionReadingRequest request)
         {
             var totals = new long[] { 0, 0, 0 };
-            var primaryDimensionBlock = requestModel.X / requestModel.SideLedCount;
-            var secondaryDimensionBlock = requestModel.Y / 5;
-            var startPixel = 0;
-            var EndPixel = secondaryDimensionBlock;
-            if (!requestModel.StartFromZero)
-            {
-                startPixel = requestModel.Y - secondaryDimensionBlock;
-                EndPixel = requestModel.Y;
-            }
-                
+            var pixelCount = 0;
             unsafe
             {
-                var p = (byte*)(void*)requestModel.ScreenPointer;
-                var pixelCount = 0;
-                for (var primaryCount = 0; primaryCount < requestModel.SideLedCount - 1; primaryCount++)
+                var p = (byte*) (void*)request.ScreenPointer;
+                for (var y = request.StartY; y < request.EndY; y++)
                 {
-                    for (var secondaryCount = startPixel; secondaryCount < EndPixel; secondaryCount++)
-                    {
-                        var startX = primaryDimensionBlock * primaryCount;
-                        var endX = startX + primaryDimensionBlock;
-                        for (var blockX = startX; blockX < endX; blockX++)
-                        {
-                            for (var color = 0; color < 3; color++)
-                            {
-                                var idx = secondaryCount * requestModel.Stride + blockX * requestModel.BPPModifier + color;
-                                totals[color] += p[idx];
-                            }
-                            pixelCount++;
-                        }
-                    }
-                    requestModel.ColourArray = AddLedColourToArray(totals, requestModel.ColourArray, pixelCount, requestModel.CurrentLedCount++);
-                    totals.CleanArray();
-                }
-                pixelCount = 0;
-                for (var secondaryCount = startPixel; secondaryCount < EndPixel; secondaryCount++)
-                {
-                    var startX = primaryDimensionBlock * requestModel.SideLedCount - 1;
-                    for (var blockX = startX; blockX < requestModel.X; blockX++)
+                    for (var x = request.StartX; x < request.EndX; x++)
                     {
                         for (var color = 0; color < 3; color++)
                         {
-                            var idx = secondaryCount * requestModel.Stride + blockX * requestModel.BPPModifier + color;
+                            var idx = y * request.Stride + x * request.BPPModifier + color;
                             totals[color] += p[idx];
                         }
-
                         pixelCount++;
                     }
                 }
-                requestModel.ColourArray = AddLedColourToArray(totals, requestModel.ColourArray, pixelCount, requestModel.CurrentLedCount++);
-                return requestModel.ColourArray;
             }
+            return new AverageColour
+            {
+                AverageB = GetAverageColour(totals[0], pixelCount),
+                AverageG = GetAverageColour(totals[1], pixelCount),
+                AverageR = GetAverageColour(totals[2], pixelCount)
+            };
+        }
+        
+        public static byte[] GetSideLED(SideLedReadingRequest request)
+        {
+            AverageColour colours;
+            if (request.isHorizontal)
+            {
+                var blockX = request.X / request.SideLedCount;
+                var sectionRequest = new ScreenSectionReadingRequest
+                {
+                    ScreenPointer = request.ScreenPointer,
+                    Stride =  request.Stride,
+                    BPPModifier =  request.BPPModifier
+                };
+                if (request.StartFromZero)
+                {
+                    sectionRequest.StartY = 0;
+                    sectionRequest.EndY = request.Y / request.Depth;
+                }
+                else
+                {
+                    sectionRequest.StartY =request.Y - request.Y / request.Depth;
+                    sectionRequest.StartY = request.Y;
+                }
+                for (var count = 0; count < request.SideLedCount - 1; count++)
+                {
+                    sectionRequest.StartX = count * blockX;
+                    sectionRequest.EndX = sectionRequest.StartX + blockX;
+                    colours = GetSectionLED(sectionRequest);
+                    request.ColourArray =
+                        ArrayService.AdColourToByteArray(request.ColourArray, colours, request.CurrentLedCount++);
+                }
+                sectionRequest.StartX = blockX * (request.SideLedCount - 1);
+                sectionRequest.EndX = request.X;
+                colours = GetSectionLED(sectionRequest);
+                request.ColourArray =
+                    ArrayService.AdColourToByteArray(request.ColourArray, colours, request.CurrentLedCount);
+            }
+            else
+            {
+                var blockY = request.Y / request.SideLedCount;
+                var sectionRequest = new ScreenSectionReadingRequest
+                {
+                    ScreenPointer = request.ScreenPointer,
+                    Stride = request.Stride,
+                    BPPModifier = request.BPPModifier
+                };
+                if (request.StartFromZero)
+                {
+                    sectionRequest.StartX = 0;
+                    sectionRequest.EndX = request.X / request.Depth;
+                }
+                else
+                {
+                    sectionRequest.StartX = request.X - request.X / request.Depth;
+                    sectionRequest.EndX = request.X;
+                }
+                for (var count = 0; count < request.SideLedCount - 1; count++)
+                {
+                    sectionRequest.StartY = count * blockY;
+                    sectionRequest.EndY = sectionRequest.StartY + blockY;
+                    colours = GetSectionLED(sectionRequest);
+                    request.ColourArray =
+                        ArrayService.AdColourToByteArray(request.ColourArray, colours, request.CurrentLedCount++);
+                }
+                sectionRequest.StartY = blockY * (request.SideLedCount - 1);
+                sectionRequest.EndY = request.Y;
+                colours = GetSectionLED(sectionRequest);
+                request.ColourArray =
+                    ArrayService.AdColourToByteArray(request.ColourArray, colours, request.CurrentLedCount);
+            }
+            return request.ColourArray;
         }
 
+        
         private static byte[] AddLedColourToArray(long[] colourArray, byte[] outputArray, int pixelCount, int currentLedCount)
         {
-            var avgB = ScreenService.GetAverageColour(colourArray[0], pixelCount);
-            var avgG = ScreenService.GetAverageColour(colourArray[1], pixelCount);
-            var avgR = ScreenService.GetAverageColour(colourArray[2], pixelCount);
-            return ArrayService.AddToByteArray(outputArray, avgR, avgG, avgB, currentLedCount);
+            var colourModel = new AverageColour
+            {
+                AverageB = GetAverageColour(colourArray[0], pixelCount),
+                AverageG = GetAverageColour(colourArray[1], pixelCount),
+                AverageR = GetAverageColour(colourArray[2], pixelCount)
+            };
+            return ArrayService.AdColourToByteArray(outputArray, colourModel, currentLedCount);
         }
     }
 }

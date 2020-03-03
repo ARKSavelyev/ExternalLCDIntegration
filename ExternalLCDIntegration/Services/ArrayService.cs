@@ -1,4 +1,6 @@
-﻿namespace ExternalLCDIntegration.Services
+﻿using ExternalLCDIntegration.Models;
+
+namespace ExternalLCDIntegration.Services
 {
     public static class ArrayService
     {
@@ -9,12 +11,12 @@
             return arrayRGB;
         }
 
-        public static byte[] AddToByteArray(byte[] array, byte R, byte G, byte B, int position)
+        public static byte[] AdColourToByteArray(byte[] array, AverageColour colourModel, int position)
         {
             var index = position * 3;
-            array[++index] = R;
-            array[++index] = G;
-            array[index] = B;
+            array[index++] = colourModel.AverageR;
+            array[index++] = colourModel.AverageG;
+            array[index] = colourModel.AverageB;
             return array;
         }
 

@@ -20,7 +20,8 @@ namespace ExternalLCDIntegration.Models
         public int CurrentLedCount { get; set; }
         public byte[] ColourArray { get; set; }
         public bool StartFromZero { get; set; }
-        public bool isHorizontal { get; set; }
+        public bool IsHorizontal { get; set; }
+        public bool IsIncremental { get; set; }
     }
 
     public class ScreenSectionReadingRequest : BaseLedRequest

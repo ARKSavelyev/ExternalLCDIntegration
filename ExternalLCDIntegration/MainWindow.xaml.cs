@@ -89,10 +89,6 @@ namespace ExternalLCDIntegration
         private void GetAverageColor()
         {
             ScreenService.GetScreenResolution(out var screenWidth, out var screenHeight);
-            var totalLedCount = _horizontalLedCountTop 
-                                + _horizontalLedCountBottom 
-                                + _verticalLedCountLeft 
-                                + _verticalLedCountRight;
 
             var size = new Size(screenWidth, screenHeight);
             var screenBitmap = ScreenService.CreateBitmap(screenWidth, screenHeight);
@@ -117,8 +113,8 @@ namespace ExternalLCDIntegration
                     Y = screenHeight,
                     X = screenWidth,
                     Depth = 5,
-                    SideLedCount = _verticalLedCountLeft,
-                    CurrentLedCount = ledCount,
+                    SideLedCount = _verticalLedCountRight,
+                CurrentLedCount = ledCount,
                     ScreenPointer = scan,
                     StartFromZero = true,
                     BPPModifier = bppModifier,
@@ -126,34 +122,37 @@ namespace ExternalLCDIntegration
                     ColourArray = ArrayService.CreateByteArray(_horizontalLedCountTop, _horizontalLedCountBottom, _verticalLedCountLeft, _verticalLedCountRight)
                 };
 
-                #region VerticalLeft
-
-                requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
-                ledCount += _verticalLedCountLeft;
-
-                #endregion
-
-                #region HorizonalTop
-
-                requestModel.CurrentLedCount = ledCount;
-                requestModel.SideLedCount = _horizontalLedCountTop;
-                requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
-                ledCount += _horizontalLedCountTop;
-
-                #endregion
-
                 #region VerticalRight
 
-                requestModel.CurrentLedCount = ledCount;
-                requestModel.SideLedCount = _verticalLedCountRight;
+                requestModel.IsIncremental = false;
                 requestModel.StartFromZero = false;
                 requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
                 ledCount += _verticalLedCountRight;
 
                 #endregion
 
-                #region HorizonalBottom
+                #region HorizonalTop
 
+                requestModel.CurrentLedCount = ledCount;
+                requestModel.StartFromZero = true;
+                requestModel.SideLedCount = _horizontalLedCountTop;
+                requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
+                ledCount += _horizontalLedCountTop;
+
+                #endregion
+
+                #region VerticalLeft
+                requestModel.SideLedCount = _verticalLedCountRight;
+                requestModel.CurrentLedCount = ledCount;
+                requestModel.IsIncremental = true;
+                requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
+                ledCount += _verticalLedCountLeft;
+
+                #endregion
+
+
+                #region HorizonalBottom
+                requestModel.StartFromZero = false;
                 requestModel.CurrentLedCount = ledCount;
                 requestModel.SideLedCount = _horizontalLedCountBottom;
                 requestModel.ColourArray = ScreenService.GetSideLED(requestModel);

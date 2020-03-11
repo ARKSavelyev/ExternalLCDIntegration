@@ -119,18 +119,21 @@ namespace ExternalLCDIntegration.Services
                 sectionRequest.StartX = blockX * (request.SideLedCount - 1);
                 sectionRequest.EndX = request.X;
                 request.ColourArray = 
-                    ArrayService.AdColourToByteArray(request.ColourArray, GetSectionLED(sectionRequest), request.CurrentLedCount);
+                    ArrayService.AdColourToByteArray(request.ColourArray, GetSectionLED(sectionRequest), request.CurrentLedCount++);
             }
-            sectionRequest.StartX = blockX * request.SideLedCount - 1;
-            sectionRequest.EndX = request.X;
-            request.ColourArray = 
-                ArrayService.AdColourToByteArray(request.ColourArray, GetSectionLED(sectionRequest), request.CurrentLedCount);
-            for (var count = request.SideLedCount - 2; count >= 0; count--) 
+            else
             {
-                sectionRequest.StartX = count * blockX;
-                sectionRequest.EndX = sectionRequest.StartX + blockX;
+                sectionRequest.StartX = blockX * request.SideLedCount - 1;
+                sectionRequest.EndX = request.X;
                 request.ColourArray =
                     ArrayService.AdColourToByteArray(request.ColourArray, GetSectionLED(sectionRequest), request.CurrentLedCount++);
+                for (var count = request.SideLedCount - 2; count >= 0; count--)
+                {
+                    sectionRequest.StartX = count * blockX;
+                    sectionRequest.EndX = sectionRequest.StartX + blockX;
+                    request.ColourArray =
+                        ArrayService.AdColourToByteArray(request.ColourArray, GetSectionLED(sectionRequest), request.CurrentLedCount++);
+                }
             }
             return request.ColourArray;
         }
@@ -154,19 +157,23 @@ namespace ExternalLCDIntegration.Services
                 sectionRequest.StartY = blockY * (request.SideLedCount - 1);
                 sectionRequest.EndY = request.Y;
                 request.ColourArray =
-                    ArrayService.AdColourToByteArray(request.ColourArray, GetSectionLED(sectionRequest), request.CurrentLedCount);
-            }
-            sectionRequest.StartY = blockY * (request.SideLedCount - 1);
-            sectionRequest.EndY = request.Y;
-            request.ColourArray =
-                ArrayService.AdColourToByteArray(request.ColourArray, GetSectionLED(sectionRequest), request.CurrentLedCount);
-            for (var count = request.SideLedCount - 2; count >= 0; count--)
-            {
-                sectionRequest.StartY = count * blockY;
-                sectionRequest.EndY = sectionRequest.StartY + blockY;
-                request.ColourArray =
                     ArrayService.AdColourToByteArray(request.ColourArray, GetSectionLED(sectionRequest), request.CurrentLedCount++);
             }
+            else
+            {
+                sectionRequest.StartY = blockY * (request.SideLedCount - 1);
+                sectionRequest.EndY = request.Y;
+                request.ColourArray =
+                    ArrayService.AdColourToByteArray(request.ColourArray, GetSectionLED(sectionRequest), request.CurrentLedCount++);
+                for (var count = request.SideLedCount - 2; count >= 0; count--)
+                {
+                    sectionRequest.StartY = count * blockY;
+                    sectionRequest.EndY = sectionRequest.StartY + blockY;
+                    request.ColourArray =
+                        ArrayService.AdColourToByteArray(request.ColourArray, GetSectionLED(sectionRequest), request.CurrentLedCount++);
+                }
+            }
+            
             return request.ColourArray;
         }
 

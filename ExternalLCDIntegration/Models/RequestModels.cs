@@ -31,4 +31,17 @@ namespace ExternalLCDIntegration.Models
         public int EndX { get; set; }
         public int EndY { get; set; }
     }
+
+    public class ScreenLedCountModel
+    {
+        public byte HorizontalLedCountTop { get; set; }
+        public byte HorizontalLedCountBottom { get; set; }
+        public byte VerticalLedCountLeft { get; set; }
+        public byte VerticalLedCountRight { get; set; }
+
+        public int TotalSum()
+        {
+            return HorizontalLedCountBottom + HorizontalLedCountTop + VerticalLedCountLeft + VerticalLedCountRight;
+        }
+    }
 }

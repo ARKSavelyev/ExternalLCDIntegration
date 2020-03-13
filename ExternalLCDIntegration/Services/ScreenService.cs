@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using ExternalLCDIntegration.Extensions;
 using ExternalLCDIntegration.Models;
@@ -179,9 +180,21 @@ namespace ExternalLCDIntegration.Services
             return request.ColourArray;
         }
 
+
+
         public static byte[] GetSideLED(SideLedReadingRequest request)
         {
             return request.IsHorizontal ? GetHorizontalSide(request) : GetVerticalSide(request);
+        }
+
+        public static Task<byte[]> GetSideLEDAsync(SideLedReadingRequest request)
+        {
+            return Task.Run(() => request.IsHorizontal ? GetHorizontalSide(request) : GetVerticalSide(request));
+        }
+
+        public static Task<byte[]> GetAllLEDAsync()
+        {
+            return null;
         }
 
         

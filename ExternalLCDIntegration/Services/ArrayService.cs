@@ -4,9 +4,9 @@ namespace ExternalLCDIntegration.Services
 {
     public static class ArrayService
     {
-        public static byte[] CreateByteArray(int _horizontalLedCountTop, int _horizontalLedCountBottom, int _verticalLedCountLeft, int _verticalLedCountRight)
+        public static byte[] CreateByteArray(ScreenLedCountModel ledCountModel)
         {
-            var newLength = (_horizontalLedCountTop + _horizontalLedCountBottom + _verticalLedCountLeft + _verticalLedCountRight) * 3;
+            var newLength = ledCountModel.TotalSum() * 3;
             var arrayRGB = new byte[newLength];
             return arrayRGB;
         }

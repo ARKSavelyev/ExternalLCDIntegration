@@ -19,10 +19,7 @@ namespace ExternalLCDIntegration
     public partial class MainWindow : Window
     {
         private bool _isRunning = false;
-        private int _horizontalLedCountTop = 5;
-        private int _horizontalLedCountBottom = 5;
-        private int _verticalLedCountLeft = 5;
-        private int _verticalLedCountRight = 5;
+        private ScreenLedCountModel _screenLedCount;
         private SerialPort _port;
         private readonly BackgroundWorker _backgroundWorker;
         private readonly string _portMessage = "Please choose a comport before starting background job.";
@@ -45,8 +42,6 @@ namespace ExternalLCDIntegration
             {
                 comList.Items.Add(port);
             }
-            _horizontalLedCountTop = int.Parse(HorizontalLedCountTop.Text);
-
         }
 
         private void OnWindowClosing(object sender, CancelEventArgs e)
@@ -112,13 +107,12 @@ namespace ExternalLCDIntegration
                     Y = screenHeight,
                     X = screenWidth,
                     Depth = 5,
-                    SideLedCount = _verticalLedCountRight,
+                    SideLedCount = _screenLedCount.VerticalLedCountRight,
                     CurrentLedCount = 0,
                     ScreenPointer = scan,
                     BPPModifier = bppModifier,
                     Stride = stride,
-                    ColourArray = ArrayService.CreateByteArray(_horizontalLedCountTop, _horizontalLedCountBottom,
-                        _verticalLedCountLeft, _verticalLedCountRight),
+                    ColourArray = ArrayService.CreateByteArray(_screenLedCount),
                     IsIncremental = false,
                     StartFromZero = false
                 };
@@ -130,13 +124,13 @@ namespace ExternalLCDIntegration
 
                 #region HorizonalTop
                 requestModel.StartFromZero = true;
-                requestModel.SideLedCount = _horizontalLedCountTop;
+                requestModel.SideLedCount = _screenLedCount.HorizontalLedCountTop;
                 requestModel.IsHorizontal = true;
                 requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
                 #endregion
 
                 #region VerticalLeft
-                requestModel.SideLedCount = _verticalLedCountLeft;
+                requestModel.SideLedCount = _screenLedCount.VerticalLedCountLeft;
                 requestModel.IsHorizontal = false;
                 requestModel.IsIncremental = true;
                 requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
@@ -144,7 +138,7 @@ namespace ExternalLCDIntegration
 
                 #region HorizonalBottom
                 requestModel.StartFromZero = false;
-                requestModel.SideLedCount = _horizontalLedCountBottom;
+                requestModel.SideLedCount = _screenLedCount.HorizontalLedCountBottom;
                 requestModel.IsHorizontal = true;
                 requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
                 #endregion
@@ -164,11 +158,14 @@ namespace ExternalLCDIntegration
         {
             try
             {
-
-                _horizontalLedCountTop = int.Parse(HorizontalLedCountTop.Text);
-                _horizontalLedCountBottom = int.Parse(HorizontalLedCountBottom.Text);
-                _verticalLedCountLeft = int.Parse(VerticalLedCountLeft.Text);
-                _verticalLedCountRight = int.Parse(VerticalLedCountRight.Text);
+                if (_screenLedCount == null)
+                {
+                    _screenLedCount = new ScreenLedCountModel();
+                }
+                _screenLedCount.HorizontalLedCountTop = byte.Parse(HorizontalLedCountTop.Text);
+                _screenLedCount.HorizontalLedCountBottom = byte.Parse(HorizontalLedCountBottom.Text);
+                _screenLedCount.VerticalLedCountLeft = byte.Parse(VerticalLedCountLeft.Text);
+                _screenLedCount.VerticalLedCountRight = byte.Parse(VerticalLedCountRight.Text);
                 return true;
             }
             catch (Exception)
@@ -177,6 +174,7 @@ namespace ExternalLCDIntegration
             }
         }
 
+        
 
         private void ConnectingBT_Click(object sender, RoutedEventArgs e)
         {

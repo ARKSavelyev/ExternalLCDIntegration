@@ -5,23 +5,22 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ExternalLCDIntegration"
         mc:Ignorable="d"
-        Title="MainWindow" Height="246" Width="421">
-    <Grid Height="225" Margin="10,0,0,0" RenderTransformOrigin="0.704,-0.021">
+        Title="MainWindow" Height="274" Width="491">
+    <Grid Height="260" RenderTransformOrigin="0.704,-0.021">
         <Grid.RowDefinitions>
-            <RowDefinition Height="4*"/>
-            <RowDefinition Height="64*"/>
-            <RowDefinition Height="68*"/>
-            <RowDefinition Height="89*"/>
+            <RowDefinition Height="49*"/>
+            <RowDefinition Height="98*"/>
+            <RowDefinition Height="106*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="154*"/>
             <ColumnDefinition Width="108*"/>
             <ColumnDefinition Width="149*"/>
         </Grid.ColumnDefinitions>
-        <Button x:Name="StartButton" Content="Start" Click="StartButton_OnClick" HorizontalAlignment="Left" Margin="26,0,0,0" VerticalAlignment="Center" RenderTransformOrigin="-2.019,0.997" Grid.Column="2" Height="36" Width="76" Grid.Row="2"/>
-        <TextBox x:Name="OutputBox" HorizontalAlignment="Center" Text="Test" TextWrapping="Wrap" VerticalAlignment="Center" Width="80" Height="36" Grid.Row="2" Grid.Column="1"/>
-        <Label x:Name="comLabel" Content="Choose ComPort:" HorizontalAlignment="Center" VerticalAlignment="Top" FontFamily="Segoe Print" FontSize="14" FontWeight="Bold" Height="34" Width="130" Margin="0,12,0,0" Grid.Row="1"/>
-        <ComboBox x:Name="comList" HorizontalAlignment="Left" Margin="11,0,0,0" VerticalAlignment="Center" Width="80" RenderTransformOrigin="0.6,0" Height="36" FontFamily="Segoe Print" FontSize="14" FontWeight="Bold" BorderBrush="#00ACACAC" Foreground="#FF27CF27" Grid.Column="1" Grid.Row="1">
+        <Button x:Name="StartButton" Content="Start" Click="StartButton_OnClick" HorizontalAlignment="Center" Margin="0,21,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.019,0.997" Grid.Column="2" Height="36" Width="76" Grid.Row="2"/>
+        <TextBox x:Name="OutputBox" HorizontalAlignment="Left" Text="Test" TextWrapping="Wrap" VerticalAlignment="Top" Width="80" Height="36" Grid.Row="2" Grid.Column="1" Margin="18,21,0,0"/>
+        <Label x:Name="comLabel" Content="Choose ComPort:" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="Segoe Print" FontSize="14" FontWeight="Bold" Height="34" Width="130"/>
+        <ComboBox x:Name="comList" HorizontalAlignment="Left" Margin="18,0,0,0" VerticalAlignment="Center" Width="80" RenderTransformOrigin="0.6,0" Height="36" FontFamily="Segoe Print" FontSize="14" FontWeight="Bold" BorderBrush="#00ACACAC" Foreground="#FF27CF27" Grid.Column="1">
             <ComboBox.OpacityMask>
                 <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                     <GradientStop Color="#FFA01E1E" Offset="0"/>
@@ -35,7 +34,7 @@
                 </RadialGradientBrush>
             </ComboBox.Background>
         </ComboBox>
-        <Button x:Name="ConnectingBT" Content="Connect" HorizontalAlignment="Left" Margin="26,13,0,0" VerticalAlignment="Top" Width="76" Height="35" FontFamily="Segoe Print" FontSize="14" FontWeight="Bold" BorderBrush="White" Click="ConnectingBT_Click" Grid.Column="2" Grid.Row="1">
+        <Button x:Name="ConnectingBT" Content="Connect" HorizontalAlignment="Center" VerticalAlignment="Center" Width="76" Height="34" FontFamily="Segoe Print" FontSize="14" FontWeight="Bold" BorderBrush="White" Click="ConnectingBT_Click" Grid.Column="2">
             <Button.Background>
                 <RadialGradientBrush>
                     <GradientStop Color="#00000000"/>
@@ -43,11 +42,15 @@
                 </RadialGradientBrush>
             </Button.Background>
         </Button>
-        <Label x:Name="OutputLabel" Content="Output:" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14" FontWeight="Bold" Height="34" Width="64" Grid.Row="2" Margin="53,0,0,0"/>
-        <Label x:Name="LedCountLabel" Content="Led Count(V1,V2, H1, H2)" HorizontalAlignment="Center" Grid.Row="3" VerticalAlignment="Center" FontSize="10" FontWeight="Bold" RenderTransformOrigin="0.36,0.232" Height="35" Width="134"/>
-        <TextBox x:Name="HorizontalLedCountTop" Grid.Column="1" HorizontalAlignment="Left" Margin="39,19,0,0" Grid.Row="3" Text="5" TextWrapping="Wrap" VerticalAlignment="Top" Width="24" Height="18"/>
-        <TextBox x:Name="VerticalLedCountLeft" Grid.Column="1" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="3" Text="4" TextWrapping="Wrap" VerticalAlignment="Center" Width="24" Height="18"/>
-        <TextBox x:Name="HorizontalLedCountBottom" Grid.Column="1" HorizontalAlignment="Left" Margin="39,52,0,0" Grid.Row="3" Text="6" TextWrapping="Wrap" VerticalAlignment="Top" Width="24" Height="18"/>
-        <TextBox x:Name="VerticalLedCountRight" Grid.Column="1" HorizontalAlignment="Left" Margin="68,0,0,0" Grid.Row="3" Text="7" TextWrapping="Wrap" VerticalAlignment="Center" Width="24" Height="18"/>
+        <Label x:Name="OutputLabel" Content="Output:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="14" FontWeight="Bold" Height="34" Width="64" Grid.Row="2" Margin="53,21,0,0"/>
+        <Label x:Name="LedCountLabel" Content="Led Count(V1,V2, H1, H2)" HorizontalAlignment="Left" Grid.Row="1" VerticalAlignment="Top" FontSize="10" FontWeight="Bold" RenderTransformOrigin="0.36,0.232" Height="36" Width="134" Margin="10,20,0,0"/>
+        <TextBox x:Name="HorizontalLedCountTop" Grid.Column="1" HorizontalAlignment="Left" Margin="46,10,0,0" Grid.Row="1" Text="5" TextWrapping="Wrap" VerticalAlignment="Top" Width="24" Height="18"/>
+        <TextBox x:Name="VerticalLedCountLeft" Grid.Column="1" HorizontalAlignment="Left" Margin="17,26,0,0" Grid.Row="1" Text="4" TextWrapping="Wrap" VerticalAlignment="Top" Width="24" Height="18"/>
+        <TextBox x:Name="HorizontalLedCountBottom" Grid.Column="1" HorizontalAlignment="Left" Margin="46,36,0,0" Grid.Row="1" Text="6" TextWrapping="Wrap" VerticalAlignment="Top" Width="24" Height="18"/>
+        <TextBox x:Name="VerticalLedCountRight" Grid.Column="1" HorizontalAlignment="Left" Margin="77,26,0,0" Grid.Row="1" Text="7" TextWrapping="Wrap" VerticalAlignment="Top" Width="24" Height="18"/>
+        <ComboBox HorizontalAlignment="Center" Margin="0,27,0,0" Grid.Row="1" VerticalAlignment="Top" Width="120" Grid.Column="2" Height="22">
+            <ComboBoxItem Content ="Mean"/>
+            <ComboBoxItem Content ="Mode"/>
+        </ComboBox>
     </Grid>
 </Window>

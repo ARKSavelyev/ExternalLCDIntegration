@@ -51,17 +51,19 @@ namespace ExternalLCDIntegration.Services
         private static AverageColour GetSectionLED(ScreenSectionReadingRequest request)
         {
             var totals = new long[] { 0, 0, 0 };
+            var heightLimit = request.EndY * request.Stride;
+            var widthLimit = request.EndX * request.BPPModifier;
             var pixelCount = 0;
             unsafe
             {
                 var p = (byte*) (void*)request.ScreenPointer;
-                for (var y = request.StartY; y < request.EndY; y++)
+                for (var y = request.StartY * request.Stride; y < heightLimit; y+=request.Stride)
                 {
-                    for (var x = request.StartX; x < request.EndX; x++)
+                    for (var x = request.StartX * request.BPPModifier; x < widthLimit; x+=request.BPPModifier)
                     {
                         for (var color = 0; color < 3; color++)
                         {
-                            var idx = y * request.Stride + x * request.BPPModifier + color;
+                            var idx = y + x + color;
                             totals[color] += p[idx];
                         }
                         pixelCount++;

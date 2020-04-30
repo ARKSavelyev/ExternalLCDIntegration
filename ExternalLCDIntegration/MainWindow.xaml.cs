@@ -86,6 +86,9 @@ namespace ExternalLCDIntegration
             ScreenService.GetScreenResolution(out var screenWidth, out var screenHeight);
 
             var size = new Size(screenWidth, screenHeight);
+
+            var verticalDepth = byte.Parse(VerticalDepthSampling.Text);
+            var horizontalDepth = byte.Parse(HorizontalDepthSampling.Text);
             var screenBitmap = ScreenService.CreateBitmap(screenWidth, screenHeight);
             do
             {
@@ -106,7 +109,7 @@ namespace ExternalLCDIntegration
                 {
                     Y = screenHeight,
                     X = screenWidth,
-                    Depth = 5,
+                    Depth = verticalDepth,
                     SideLedCount = _screenLedCount.VerticalLedCountRight,
                     CurrentLedCount = 0,
                     ScreenPointer = scan,
@@ -126,6 +129,7 @@ namespace ExternalLCDIntegration
                 requestModel.StartFromZero = true;
                 requestModel.SideLedCount = _screenLedCount.HorizontalLedCountTop;
                 requestModel.IsHorizontal = true;
+                requestModel.Depth = horizontalDepth;
                 requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
                 #endregion
 
@@ -133,6 +137,7 @@ namespace ExternalLCDIntegration
                 requestModel.SideLedCount = _screenLedCount.VerticalLedCountLeft;
                 requestModel.IsHorizontal = false;
                 requestModel.IsIncremental = true;
+                requestModel.Depth = verticalDepth;
                 requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
                 #endregion
 
@@ -140,6 +145,7 @@ namespace ExternalLCDIntegration
                 requestModel.StartFromZero = false;
                 requestModel.SideLedCount = _screenLedCount.HorizontalLedCountBottom;
                 requestModel.IsHorizontal = true;
+                requestModel.Depth = horizontalDepth;
                 requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
                 #endregion
 

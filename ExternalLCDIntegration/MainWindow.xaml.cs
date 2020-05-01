@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO.Ports;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Documents;
 using ExternalLCDIntegration.Extensions;
 using ExternalLCDIntegration.Models;
 using ExternalLCDIntegration.Services;
@@ -90,6 +94,8 @@ namespace ExternalLCDIntegration
             var verticalDepth = byte.Parse(VerticalDepthSampling.Text);
             var horizontalDepth = byte.Parse(HorizontalDepthSampling.Text);
             var screenBitmap = ScreenService.CreateBitmap(screenWidth, screenHeight);
+            var readings = new Task<byte[]>[4];
+            Task.WaitAll(readings);
             do
             {
                 WaitMilliseconds(100);
@@ -104,7 +110,29 @@ namespace ExternalLCDIntegration
                     format);
                 var stride = sourceData.Stride;
                 var scan = sourceData.Scan0;
+                var readingsCount = 0;
+               
+                #region VerticalRight
+                readings[readingsCount++] = SendSideRequestAsync(screenHeight, screenWidth, verticalDepth,
+                    _screenLedCount.VerticalLedCountRight, 0, scan, bppModifier, stride, false, false, false);
+                #endregion
 
+                #region HorizonalTop
+                readings[readingsCount++] = SendSideRequestAsync(screenHeight, screenWidth, horizontalDepth,
+                    _screenLedCount.HorizontalLedCountTop, 0, scan, bppModifier, stride, false, true, true);
+                #endregion
+
+                #region VerticalLeft
+                readings[readingsCount++] = SendSideRequestAsync(screenHeight, screenWidth, verticalDepth,
+                    _screenLedCount.VerticalLedCountLeft, 0, scan, bppModifier, stride, true, true, false);
+                #endregion
+
+                #region HorizonalBottom
+                readings[readingsCount++] = SendSideRequestAsync(screenHeight, screenWidth, horizontalDepth,
+                    _screenLedCount.HorizontalLedCountBottom, 0, scan, bppModifier, stride, true, false, true);
+                #endregion
+
+                /* SYNCHRONOUS VERSION
                 var requestModel = new SideLedReadingRequest
                 {
                     Y = screenHeight,
@@ -121,7 +149,7 @@ namespace ExternalLCDIntegration
                 };
 
                 #region VerticalRight
-
+                
                 requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
                 #endregion
 
@@ -148,11 +176,39 @@ namespace ExternalLCDIntegration
                 requestModel.Depth = horizontalDepth;
                 requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
                 #endregion
+                */
+                var resultsArray = new byte[readingsCount][];
+                for (var loopCount = 0; loopCount < readingsCount; loopCount++)
+                {
+                    resultsArray[loopCount] = readings[loopCount].Result;
+                }
 
                 screenBitmap.UnlockBits(sourceData);
-                SendDataToSerialPort(requestModel.ColourArray, requestModel.ColourArray.Length);
+                var endArray = ArrayService.ConvertToSingleArray(resultsArray);
+                SendDataToSerialPort(endArray, endArray.Length);
                 //Dispatcher.BeginInvoke(new Action(() => { PrintRGB(avgB, avgG, avgR); }));
             } while (_isRunning);
+        }
+
+
+        private Task<byte[]> SendSideRequestAsync(int screenHeight, int screenWidth, byte depth, byte sideLedCount, int currentLedCount, IntPtr screenPointer, int bppModifier, int stride, bool isIncremental, bool startFromZero, bool isHorizontal) 
+        {
+            var requestModel = new SideLedReadingRequest
+            {
+                Y = screenHeight,
+                X = screenWidth,
+                Depth = depth,
+                SideLedCount = sideLedCount,
+                CurrentLedCount = currentLedCount,
+                ScreenPointer = screenPointer,
+                BPPModifier = bppModifier,
+                Stride = stride,
+                ColourArray = ArrayService.CreateByteArray(_screenLedCount),
+                IsIncremental = isIncremental,
+                StartFromZero = startFromZero,
+                IsHorizontal = isHorizontal
+            };
+            return ScreenService.GetSideLEDAsync(requestModel);
         }
 
         private void BackgroundWorkerOnDoWork(object sender, DoWorkEventArgs e)

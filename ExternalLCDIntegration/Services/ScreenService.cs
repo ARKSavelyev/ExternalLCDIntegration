@@ -176,10 +176,91 @@ namespace ExternalLCDIntegration.Services
                         ArrayService.AdColourToByteArray(request.ColourArray, GetSectionLED(sectionRequest), request.CurrentLedCount++);
                 }
             }
-            
+
             return request.ColourArray;
         }
 
+
+        private static byte[] GetHorizontalSideV2(SideLedReadingRequest request)
+        {
+            var blockX = request.X / request.SideLedCount;
+            var sectionRequest = CreateSectionReadingRequest(request);
+            GetStartAndEndSecondarySide(request.StartFromZero, request.Depth, request.Y, out var start, out var end);
+            sectionRequest.StartY = start;
+            sectionRequest.EndY = end;
+            var samplingArray = new byte[request.SideLedCount * 3];
+            var ledCount = 0;
+            if (request.IsIncremental)
+            {
+                for (var count = 0; count < request.SideLedCount - 1; count++)
+                {
+                    sectionRequest.StartX = count * blockX;
+                    sectionRequest.EndX = sectionRequest.StartX + blockX;
+                    request.ColourArray =
+                        ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount);
+                }
+                sectionRequest.StartX = blockX * (request.SideLedCount - 1);
+                sectionRequest.EndX = request.X;
+                request.ColourArray =
+                    ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount);
+            }
+            else
+            {
+                sectionRequest.StartX = blockX * request.SideLedCount - 1;
+                sectionRequest.EndX = request.X;
+                request.ColourArray =
+                    ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount);
+                for (var count = request.SideLedCount - 2; count >= 0; count--)
+                {
+                    sectionRequest.StartX = count * blockX;
+                    sectionRequest.EndX = sectionRequest.StartX + blockX;
+                    request.ColourArray =
+                        ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount);
+                }
+            }
+            return samplingArray;
+        }
+
+        private static byte[] GetVerticalSideV2(SideLedReadingRequest request)
+        {
+            var blockY = request.Y / request.SideLedCount;
+            var sectionRequest = CreateSectionReadingRequest(request);
+            GetStartAndEndSecondarySide(request.StartFromZero, request.Depth, request.X, out var start, out var end);
+            sectionRequest.StartX = start;
+            sectionRequest.EndX = end;
+            var samplingArray = new byte[request.SideLedCount * 3];
+            var ledCount = 0;
+            if (request.IsIncremental)
+            {
+                for (var count = 0; count < request.SideLedCount - 1; count++)
+                {
+                    sectionRequest.StartY = count * blockY;
+                    sectionRequest.EndY = sectionRequest.StartY + blockY;
+                    request.ColourArray =
+                        ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount++);
+                }
+                sectionRequest.StartY = blockY * (request.SideLedCount - 1);
+                sectionRequest.EndY = request.Y;
+                request.ColourArray =
+                    ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount++);
+            }
+            else
+            {
+                sectionRequest.StartY = blockY * (request.SideLedCount - 1);
+                sectionRequest.EndY = request.Y;
+                request.ColourArray =
+                    ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount++);
+                for (var count = request.SideLedCount - 2; count >= 0; count--)
+                {
+                    sectionRequest.StartY = count * blockY;
+                    sectionRequest.EndY = sectionRequest.StartY + blockY;
+                    request.ColourArray =
+                        ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount++);
+                }
+            }
+
+            return samplingArray;
+        }
 
 
         public static byte[] GetSideLED(SideLedReadingRequest request)
@@ -189,7 +270,7 @@ namespace ExternalLCDIntegration.Services
 
         public static Task<byte[]> GetSideLEDAsync(SideLedReadingRequest request)
         {
-            return Task.Run(() => request.IsHorizontal ? GetHorizontalSide(request) : GetVerticalSide(request));
+            return Task.Run(() => request.IsHorizontal ? GetHorizontalSideV2(request) : GetVerticalSideV2(request));
         }
 
         public static Task<byte[]> GetAllLEDAsync()

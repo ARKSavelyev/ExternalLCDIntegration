@@ -1,4 +1,6 @@
-﻿using ExternalLCDIntegration.Models;
+﻿using System.Collections.Generic;
+using System.Linq;
+using ExternalLCDIntegration.Models;
 
 namespace ExternalLCDIntegration.Services
 {
@@ -18,6 +20,21 @@ namespace ExternalLCDIntegration.Services
             array[index++] = colourModel.AverageG;
             array[index] = colourModel.AverageB;
             return array;
+        }
+
+        public static byte[] ConvertToSingleArray(byte[][] jaggedArray)
+        {
+            var returnArray = new byte[0];
+            if (jaggedArray.Length <= 0) 
+                return returnArray;
+            IEnumerable<byte> collection = jaggedArray[0];
+            if (jaggedArray.Length > 1)
+            {
+                collection = jaggedArray.Aggregate(collection, (current, ledArray) => current.Concat(ledArray));
+            }
+            returnArray = collection.ToArray();
+
+            return returnArray;
         }
 
         public static byte[] FillByteArray(byte[] array, byte R, byte G, byte B)

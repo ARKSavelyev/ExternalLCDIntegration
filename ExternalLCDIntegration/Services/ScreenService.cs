@@ -13,12 +13,6 @@ namespace ExternalLCDIntegration.Services
 {
     public static class ScreenService
     {
-
-        public static Bitmap GetScreenBitmap(int screenWidth, int screenHeight, Size size)
-        {
-           return CopyFromTheScreen(CreateBitmap(screenWidth, screenHeight), size);
-        }
-
         public static Bitmap CreateBitmap(int screenWidth, int screenHeight)
         {
             return new Bitmap(screenWidth, screenHeight);
@@ -26,10 +20,8 @@ namespace ExternalLCDIntegration.Services
 
         public static Bitmap CopyFromTheScreen(Bitmap screenBitmap, Size size)
         {
-            using (var g = Graphics.FromImage(screenBitmap))
-            {
-                g.CopyFromScreen(Point.Empty, Point.Empty, size);
-            }
+            using var g = Graphics.FromImage(screenBitmap);
+            g.CopyFromScreen(Point.Empty, Point.Empty, size);
             return screenBitmap;
         }
 
@@ -42,11 +34,6 @@ namespace ExternalLCDIntegration.Services
         public static byte GetAverageColour(long total, int count)
         {
             return (byte)(total / count);
-        }
-
-        public static string PrintRGB(int avrB, int avrG, int avrR)
-        {
-            return $"R: {avrR.ToString()} G: {avrG.ToString()} B: {avrB.ToString()}";
         }
 
         private static AverageColour GetSectionLED(ScreenSectionReadingRequest request)
@@ -93,6 +80,11 @@ namespace ExternalLCDIntegration.Services
             }
         }
 
+        /// <summary>
+        /// Create a request model for reading screen section.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         private static ScreenSectionReadingRequest CreateSectionReadingRequest(SideLedReadingRequest request)
         {
             return new ScreenSectionReadingRequest
@@ -103,6 +95,11 @@ namespace ExternalLCDIntegration.Services
             };
         }
 
+        /// <summary>
+        /// Get average led colour, for Horizontal sides of the screen.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         private static byte[] GetHorizontalSide(SideLedReadingRequest request)
         {
             var blockX = request.X / request.SideLedCount;
@@ -141,6 +138,11 @@ namespace ExternalLCDIntegration.Services
             return request.ColourArray;
         }
 
+        /// <summary>
+        /// Get average led colour, for vertical sides of the screen.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         private static byte[] GetVerticalSide(SideLedReadingRequest request)
         {
             var blockY = request.Y / request.SideLedCount;
@@ -180,8 +182,12 @@ namespace ExternalLCDIntegration.Services
             return request.ColourArray;
         }
 
-
-        private static byte[] GetHorizontalSideV2(SideLedReadingRequest request)
+        /// <summary>
+        /// Get average led colour, for Horizontal sides of the screen, asynchronous.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        private static byte[] GetHorizontalSideAsync(SideLedReadingRequest request)
         {
             var blockX = request.X / request.SideLedCount;
             var sectionRequest = CreateSectionReadingRequest(request);
@@ -197,7 +203,7 @@ namespace ExternalLCDIntegration.Services
                     sectionRequest.StartX = count * blockX;
                     sectionRequest.EndX = sectionRequest.StartX + blockX;
                     request.ColourArray =
-                        ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount);
+                        ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount++);
                 }
                 sectionRequest.StartX = blockX * (request.SideLedCount - 1);
                 sectionRequest.EndX = request.X;
@@ -209,19 +215,24 @@ namespace ExternalLCDIntegration.Services
                 sectionRequest.StartX = blockX * request.SideLedCount - 1;
                 sectionRequest.EndX = request.X;
                 request.ColourArray =
-                    ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount);
+                    ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount++);
                 for (var count = request.SideLedCount - 2; count >= 0; count--)
                 {
                     sectionRequest.StartX = count * blockX;
                     sectionRequest.EndX = sectionRequest.StartX + blockX;
                     request.ColourArray =
-                        ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount);
+                        ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount++);
                 }
             }
             return samplingArray;
         }
 
-        private static byte[] GetVerticalSideV2(SideLedReadingRequest request)
+        /// <summary>
+        /// Get average led colour, for Vertical sides of the screen, asynchronous.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        private static byte[] GetVerticalSideAsync(SideLedReadingRequest request)
         {
             var blockY = request.Y / request.SideLedCount;
             var sectionRequest = CreateSectionReadingRequest(request);
@@ -242,7 +253,7 @@ namespace ExternalLCDIntegration.Services
                 sectionRequest.StartY = blockY * (request.SideLedCount - 1);
                 sectionRequest.EndY = request.Y;
                 request.ColourArray =
-                    ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount++);
+                    ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount);
             }
             else
             {
@@ -262,7 +273,6 @@ namespace ExternalLCDIntegration.Services
             return samplingArray;
         }
 
-
         public static byte[] GetSideLED(SideLedReadingRequest request)
         {
             return request.IsHorizontal ? GetHorizontalSide(request) : GetVerticalSide(request);
@@ -270,24 +280,7 @@ namespace ExternalLCDIntegration.Services
 
         public static Task<byte[]> GetSideLEDAsync(SideLedReadingRequest request)
         {
-            return Task.Run(() => request.IsHorizontal ? GetHorizontalSideV2(request) : GetVerticalSideV2(request));
-        }
-
-        public static Task<byte[]> GetAllLEDAsync()
-        {
-            return null;
-        }
-
-        
-        private static byte[] AddLedColourToArray(long[] colourArray, byte[] outputArray, int pixelCount, int currentLedCount)
-        {
-            var colourModel = new AverageColour
-            {
-                AverageB = GetAverageColour(colourArray[0], pixelCount),
-                AverageG = GetAverageColour(colourArray[1], pixelCount),
-                AverageR = GetAverageColour(colourArray[2], pixelCount)
-            };
-            return ArrayService.AdColourToByteArray(outputArray, colourModel, currentLedCount);
+            return Task.Run(() => request.IsHorizontal ? GetHorizontalSideAsync(request) : GetVerticalSideAsync(request));
         }
     }
 }

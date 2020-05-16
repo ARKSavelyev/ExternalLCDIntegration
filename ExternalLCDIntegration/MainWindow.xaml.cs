@@ -94,8 +94,7 @@ namespace ExternalLCDIntegration
             var verticalDepth = byte.Parse(VerticalDepthSampling.Text);
             var horizontalDepth = byte.Parse(HorizontalDepthSampling.Text);
             var screenBitmap = ScreenService.CreateBitmap(screenWidth, screenHeight);
-            var readings = new Task<byte[]>[4];
-            Task.WaitAll(readings);
+            var readings = ArrayService.CreateTaskArray(4);
             do
             {
                 WaitMilliseconds(100);
@@ -132,51 +131,6 @@ namespace ExternalLCDIntegration
                     _screenLedCount.HorizontalLedCountBottom, 0, scan, bppModifier, stride, true, false, true);
                 #endregion
 
-                /* SYNCHRONOUS VERSION
-                var requestModel = new SideLedReadingRequest
-                {
-                    Y = screenHeight,
-                    X = screenWidth,
-                    Depth = verticalDepth,
-                    SideLedCount = _screenLedCount.VerticalLedCountRight,
-                    CurrentLedCount = 0,
-                    ScreenPointer = scan,
-                    BPPModifier = bppModifier,
-                    Stride = stride,
-                    ColourArray = ArrayService.CreateByteArray(_screenLedCount),
-                    IsIncremental = false,
-                    StartFromZero = false
-                };
-
-                #region VerticalRight
-                
-                requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
-                #endregion
-
-                #region HorizonalTop
-                requestModel.StartFromZero = true;
-                requestModel.SideLedCount = _screenLedCount.HorizontalLedCountTop;
-                requestModel.IsHorizontal = true;
-                requestModel.Depth = horizontalDepth;
-                requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
-                #endregion
-
-                #region VerticalLeft
-                requestModel.SideLedCount = _screenLedCount.VerticalLedCountLeft;
-                requestModel.IsHorizontal = false;
-                requestModel.IsIncremental = true;
-                requestModel.Depth = verticalDepth;
-                requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
-                #endregion
-
-                #region HorizonalBottom
-                requestModel.StartFromZero = false;
-                requestModel.SideLedCount = _screenLedCount.HorizontalLedCountBottom;
-                requestModel.IsHorizontal = true;
-                requestModel.Depth = horizontalDepth;
-                requestModel.ColourArray = ScreenService.GetSideLED(requestModel);
-                #endregion
-                */
                 var resultsArray = new byte[readingsCount][];
                 for (var loopCount = 0; loopCount < readingsCount; loopCount++)
                 {

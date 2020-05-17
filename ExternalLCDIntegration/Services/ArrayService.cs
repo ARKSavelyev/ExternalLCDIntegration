@@ -81,12 +81,17 @@ namespace ExternalLCDIntegration.Services
         /// </summary>
         /// <param name="arrayLength"></param>
         /// <returns></returns>
-        public static Task<byte[]>[] CreateTaskArray(int arrayLength)
+        public static Task<byte[]>[] CreateTaskByteArray(int arrayLength)
         {
             return new Task<byte[]>[arrayLength];
         }
 
-        public static byte[][] AwaitTaskArray(Task<byte[]>[] taskArray)
+        public static Task<AverageColour>[] CreateTaskAverageColourArray(int arrayLength)
+        {
+            return new Task<AverageColour>[arrayLength];
+        }
+
+        public static byte[][] AwaitTaskByteArray(Task<byte[]>[] taskArray)
         {
             var length = taskArray.Length;
             var resultsArray = new byte[length][];
@@ -95,6 +100,17 @@ namespace ExternalLCDIntegration.Services
                 resultsArray[loopCount] = taskArray[loopCount].Result;
             }
 
+            return resultsArray;
+        }
+
+        public static AverageColour[] AwaitTaskAverageColourArray(Task<AverageColour>[] taskArray)
+        {
+            var length = taskArray.Length;
+            var resultsArray = new AverageColour[length];
+            for (var loopCount = 0; loopCount < length; loopCount++)
+            {
+                resultsArray[loopCount] = taskArray[loopCount].Result;
+            }
             return resultsArray;
         }
     }

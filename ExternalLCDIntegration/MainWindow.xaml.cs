@@ -56,13 +56,11 @@ namespace ExternalLCDIntegration
 
         private void StartButton_OnClick(object sender, RoutedEventArgs e)
         {
-            
             if (_port == null)
             {
                 MessageBox.Show(_portMessage);
                 return;
             }
-            
             if (!GetLedCount())
             {
                 MessageBox.Show(_ledMessage);
@@ -108,7 +106,7 @@ namespace ExternalLCDIntegration
             var verticalDepth = byte.Parse(ReadTextBox(VerticalDepthSampling));
             var horizontalDepth = byte.Parse(ReadTextBox(HorizontalDepthSampling));
             var screenBitmap = ScreenService.CreateBitmap(screenWidth, screenHeight);
-            var readings = ArrayService.CreateTaskArray(4);
+            var readings = ArrayService.CreateTaskByteArray(4);
             do
             {
                 WaitMilliseconds(100);
@@ -144,9 +142,10 @@ namespace ExternalLCDIntegration
                 readings[readingsCount++] = SendSideRequestAsync(screenHeight, screenWidth, horizontalDepth,
                     _screenLedCount.HorizontalLedCountBottom, 0, scan, bppModifier, stride, true, false, true);
                 #endregion
-                var resultsArray = ArrayService.AwaitTaskArray(readings);
+                var resultsArray = ArrayService.AwaitTaskByteArray(readings);
                 screenBitmap.UnlockBits(sourceData);
                 var endArray = ArrayService.ConvertToSingleArray(resultsArray);
+                endArray = endArray;
                 //SendDataToSerialPort(endArray, endArray.Length);
                 //Dispatcher.BeginInvoke(new Action(() => { PrintRGB(avgB, avgG, avgR); }));
             } while (_isRunning);

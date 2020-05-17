@@ -56,6 +56,7 @@ namespace ExternalLCDIntegration
 
         private void StartButton_OnClick(object sender, RoutedEventArgs e)
         {
+            
             if (_port == null)
             {
                 MessageBox.Show(_portMessage);
@@ -68,6 +69,7 @@ namespace ExternalLCDIntegration
             }
             if (_isRunning)
             {
+                RaiseEvent(_backgroundWorker.Disposed);
                 _backgroundWorker.CancelAsync();
             }
             else
@@ -97,6 +99,11 @@ namespace ExternalLCDIntegration
             return boxToRead.Dispatcher.Invoke(() => boxToRead.Text);
         }
 
+        private void UpdateTextBox(TextBox boxToUpdate, string newText)
+        {
+            boxToUpdate.Dispatcher.Invoke(new Action(() =>boxToUpdate.Text = newText));
+        }
+
         private void GetAverageColor()
         {
             ScreenService.GetScreenResolution(out var screenWidth, out var screenHeight);
@@ -107,9 +114,11 @@ namespace ExternalLCDIntegration
             var horizontalDepth = byte.Parse(ReadTextBox(HorizontalDepthSampling));
             var screenBitmap = ScreenService.CreateBitmap(screenWidth, screenHeight);
             var readings = ArrayService.CreateTaskByteArray(4);
+            var timer = new Stopwatch();
             do
             {
                 WaitMilliseconds(100);
+                timer.Start();
                 screenBitmap = ScreenService.CopyFromTheScreen(screenBitmap, size);
                 var format = screenBitmap.PixelFormat;
                 var bppModifier =
@@ -145,9 +154,10 @@ namespace ExternalLCDIntegration
                 var resultsArray = ArrayService.AwaitTaskByteArray(readings);
                 screenBitmap.UnlockBits(sourceData);
                 var endArray = ArrayService.ConvertToSingleArray(resultsArray);
-                endArray = endArray;
-                //SendDataToSerialPort(endArray, endArray.Length);
-                //Dispatcher.BeginInvoke(new Action(() => { PrintRGB(avgB, avgG, avgR); }));
+                var elapsedTime = timer.ElapsedMilliseconds.ToString();
+                timer.Reset();
+                UpdateTextBox(OutputBox, elapsedTime);
+                SendDataToSerialPort(endArray, endArray.Length);
             } while (_isRunning);
         }
 

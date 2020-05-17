@@ -191,39 +191,40 @@ namespace ExternalLCDIntegration.Services
         private static byte[] GetHorizontalSideAsync(SideLedReadingRequest request)
         {
             var blockX = request.X / request.SideLedCount;
-            var sectionRequest = CreateSectionReadingRequest(request);
-            GetStartAndEndSecondarySide(request.StartFromZero, request.Depth, request.Y, out var start, out var end);
-            sectionRequest.StartY = start;
-            sectionRequest.EndY = end;
-            var samplingArray = new byte[request.SideLedCount * 3];
+            GetStartAndEndSecondarySide(request.StartFromZero, request.Depth, request.Y, out var startY, out var endY);
+            var readings = ArrayService.CreateTaskAverageColourArray(request.SideLedCount);
             var ledCount = 0;
             if (request.IsIncremental)
             {
+                int startX;
+                int endX;
                 for (var count = 0; count < request.SideLedCount - 1; count++)
                 {
-                    sectionRequest.StartX = count * blockX;
-                    sectionRequest.EndX = sectionRequest.StartX + blockX;
-                    request.ColourArray =
-                        ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount++);
+                    startX = count * blockX;
+                    endX = startX + blockX;
+                    readings[ledCount++] = GetSectionReading(CreateSectionReadingRequest(request.ScreenPointer, request.Stride, request.BPPModifier, startX, endX, startY, endY));
                 }
-                sectionRequest.StartX = blockX * (request.SideLedCount - 1);
-                sectionRequest.EndX = request.X;
-                request.ColourArray =
-                    ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount);
+                startX = blockX * (request.SideLedCount - 1);
+                endX = request.X;
+                readings[ledCount] = GetSectionReading(CreateSectionReadingRequest(request.ScreenPointer, request.Stride, request.BPPModifier, startX, endX, startY, endY));
             }
             else
             {
-                sectionRequest.StartX = blockX * request.SideLedCount - 1;
-                sectionRequest.EndX = request.X;
-                request.ColourArray =
-                    ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount++);
+                var startX = blockX * request.SideLedCount - 1;
+                var endX = request.X;
+                readings[ledCount++] = GetSectionReading(CreateSectionReadingRequest(request.ScreenPointer, request.Stride, request.BPPModifier, startX, endX, startY, endY)); 
                 for (var count = request.SideLedCount - 2; count >= 0; count--)
                 {
-                    sectionRequest.StartX = count * blockX;
-                    sectionRequest.EndX = sectionRequest.StartX + blockX;
-                    request.ColourArray =
-                        ArrayService.AdColourToByteArray(samplingArray, GetSectionLED(sectionRequest), ledCount++);
+                    startX = count * blockX;
+                    endX = startX + blockX;
+                    readings[ledCount++] = GetSectionReading(CreateSectionReadingRequest(request.ScreenPointer, request.Stride, request.BPPModifier, startX, endX, startY, endY));
                 }
+            }
+            var averageArray = ArrayService.AwaitTaskAverageColourArray(readings);
+            var samplingArray = new byte[request.SideLedCount * 3];
+            for (var readingCount = 0; readingCount < averageArray.Length; readingCount++)
+            {
+                samplingArray = ArrayService.AdColourToByteArray(samplingArray, averageArray[readingCount], readingCount);
             }
             return samplingArray;
         }
@@ -255,13 +256,13 @@ namespace ExternalLCDIntegration.Services
             var readings = ArrayService.CreateTaskAverageColourArray(request.SideLedCount);
             if (request.IsIncremental)
             {
-                var startY = 0;
-                var endY = 0;
+                int startY;
+                int endY;
                 for (var count = 0; count < request.SideLedCount - 1; count++)
                 {
                     startY = count * blockY;
                     endY = startY + blockY;
-                    readings[ledCount++] = GetSectionReading(CreateSectionReadingRequest(request.ScreenPointer, request.Stride,request.BPPModifier, startX, endX, startY, endY));
+                    readings[ledCount++] = GetSectionReading(CreateSectionReadingRequest(request.ScreenPointer, request.Stride, request.BPPModifier, startX, endX, startY, endY));
                 }
                 startY = blockY * (request.SideLedCount - 1);
                 endY = request.Y;

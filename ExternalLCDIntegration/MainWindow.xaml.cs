@@ -26,20 +26,20 @@ namespace ExternalLCDIntegration
         private bool _isRunning = false;
         private ScreenLedCountModel _screenLedCount;
         private SerialPort _port;
-        private readonly BackgroundWorker _backgroundWorker;
+        private readonly BackgroundWorker _ledBackgroundWorker;
         private readonly string _portMessage = "Please choose a comport before starting background job.";
         private readonly string _ledMessage = "The Led Count is invalid.";
 
         public MainWindow()
         {
             InitializeComponent();
-            _backgroundWorker = new BackgroundWorker
+            _ledBackgroundWorker = new BackgroundWorker
             {
                 WorkerReportsProgress = true,
                 WorkerSupportsCancellation = true
             };
-            _backgroundWorker.DoWork += BackgroundWorkerOnDoWork;
-
+            _ledBackgroundWorker.DoWork += LEDBackgroundWorkerOnDoWork;
+            _ledBackgroundWorker.RunWorkerCompleted += LEDBackgroundWorkerStopWork;
             Closing += OnWindowClosing;
 
             string[] portNames = SerialPort.GetPortNames();
@@ -49,6 +49,12 @@ namespace ExternalLCDIntegration
             }
         }
 
+        private void LEDBackgroundWorkerStopWork(object sender, RunWorkerCompletedEventArgs e)
+        {
+            StartButton.Content = "Start";
+            StartButton.IsEnabled = true;
+        }
+
         private void OnWindowClosing(object sender, CancelEventArgs e)
         {
             _port?.Close();
@@ -56,7 +62,6 @@ namespace ExternalLCDIntegration
 
         private void StartButton_OnClick(object sender, RoutedEventArgs e)
         {
-            
             if (_port == null)
             {
                 MessageBox.Show(_portMessage);
@@ -67,17 +72,18 @@ namespace ExternalLCDIntegration
                 MessageBox.Show(_ledMessage);
                 return;
             }
-            if (_isRunning)
+            _isRunning = !_isRunning;
+            if (_ledBackgroundWorker.IsBusy)
             {
-                RaiseEvent(_backgroundWorker.Disposed);
-                _backgroundWorker.CancelAsync();
+                StartButton.IsEnabled = false;
+                StartButton.Content = "Stopping...";
+                _ledBackgroundWorker.CancelAsync();
             }
             else
             {
-                _backgroundWorker.RunWorkerAsync();
+                StartButton.Content = "Running";
+                _ledBackgroundWorker.RunWorkerAsync();
             }
-
-            _isRunning = !_isRunning;
         }
 
         private void WaitMilliseconds(int milliseconds)
@@ -159,6 +165,7 @@ namespace ExternalLCDIntegration
                 UpdateTextBox(OutputBox, elapsedTime);
                 SendDataToSerialPort(endArray, endArray.Length);
             } while (_isRunning);
+            screenBitmap.Dispose();
         }
 
 
@@ -182,7 +189,7 @@ namespace ExternalLCDIntegration
             return ScreenService.GetSideLEDAsync(requestModel);
         }
 
-        private void BackgroundWorkerOnDoWork(object sender, DoWorkEventArgs e)
+        private void LEDBackgroundWorkerOnDoWork(object sender, DoWorkEventArgs e)
         {
             GetAverageColor();
         }

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Documents;
 using ExternalLCDIntegration.Extensions;
 using ExternalLCDIntegration.Models;
@@ -55,11 +56,13 @@ namespace ExternalLCDIntegration
 
         private void StartButton_OnClick(object sender, RoutedEventArgs e)
         {
+            
             if (_port == null)
             {
                 MessageBox.Show(_portMessage);
                 return;
             }
+            
             if (!GetLedCount())
             {
                 MessageBox.Show(_ledMessage);
@@ -85,14 +88,25 @@ namespace ExternalLCDIntegration
                 Thread.Sleep(25);
             }
         }
+
+        /// <summary>
+        /// Uses dispatcher and invoker to get the value of the TextBox, no matter the thread called from.
+        /// </summary>
+        /// <param name="boxToRead"></param>
+        /// <returns></returns>
+        private string ReadTextBox(TextBox boxToRead)
+        {
+            return boxToRead.Dispatcher.Invoke(() => boxToRead.Text);
+        }
+
         private void GetAverageColor()
         {
             ScreenService.GetScreenResolution(out var screenWidth, out var screenHeight);
 
             var size = new Size(screenWidth, screenHeight);
 
-            var verticalDepth = byte.Parse(VerticalDepthSampling.Text);
-            var horizontalDepth = byte.Parse(HorizontalDepthSampling.Text);
+            var verticalDepth = byte.Parse(ReadTextBox(VerticalDepthSampling));
+            var horizontalDepth = byte.Parse(ReadTextBox(HorizontalDepthSampling));
             var screenBitmap = ScreenService.CreateBitmap(screenWidth, screenHeight);
             var readings = ArrayService.CreateTaskArray(4);
             do
@@ -130,16 +144,10 @@ namespace ExternalLCDIntegration
                 readings[readingsCount++] = SendSideRequestAsync(screenHeight, screenWidth, horizontalDepth,
                     _screenLedCount.HorizontalLedCountBottom, 0, scan, bppModifier, stride, true, false, true);
                 #endregion
-
-                var resultsArray = new byte[readingsCount][];
-                for (var loopCount = 0; loopCount < readingsCount; loopCount++)
-                {
-                    resultsArray[loopCount] = readings[loopCount].Result;
-                }
-
+                var resultsArray = ArrayService.AwaitTaskArray(readings);
                 screenBitmap.UnlockBits(sourceData);
                 var endArray = ArrayService.ConvertToSingleArray(resultsArray);
-                SendDataToSerialPort(endArray, endArray.Length);
+                //SendDataToSerialPort(endArray, endArray.Length);
                 //Dispatcher.BeginInvoke(new Action(() => { PrintRGB(avgB, avgG, avgR); }));
             } while (_isRunning);
         }

@@ -85,5 +85,17 @@ namespace ExternalLCDIntegration.Services
         {
             return new Task<byte[]>[arrayLength];
         }
+
+        public static byte[][] AwaitTaskArray(Task<byte[]>[] taskArray)
+        {
+            var length = taskArray.Length;
+            var resultsArray = new byte[length][];
+            for (var loopCount = 0; loopCount < length; loopCount++)
+            {
+                resultsArray[loopCount] = taskArray[loopCount].Result;
+            }
+
+            return resultsArray;
+        }
     }
 }

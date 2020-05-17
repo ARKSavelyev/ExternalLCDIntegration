@@ -66,6 +66,7 @@ namespace ExternalLCDIntegration.Services
             };
         }
 
+        
         private static void GetStartAndEndSecondarySide(bool startFromZero,int depth, int dimension,out int start,out int end)
         {
             if (startFromZero)
@@ -81,11 +82,11 @@ namespace ExternalLCDIntegration.Services
         }
 
         /// <summary>
-        /// Create a request model for reading screen section.
+        /// Create a base request model for reading screen section from a general base Led Request.
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        private static ScreenSectionReadingRequest CreateSectionReadingRequest(SideLedReadingRequest request)
+        private static ScreenSectionReadingRequest CreateSectionReadingRequest(BaseLedRequest request)
         {
             return new ScreenSectionReadingRequest
             {

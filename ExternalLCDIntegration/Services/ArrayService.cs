@@ -45,11 +45,8 @@ namespace ExternalLCDIntegration.Services
             var returnArray = new byte[0];
             if (jaggedArray.Length <= 0) 
                 return returnArray;
-            IEnumerable<byte> collection = jaggedArray[0];
-            if (jaggedArray.Length > 1)
-            {
-                collection = jaggedArray.Aggregate(collection, (current, ledArray) => current.Concat(ledArray));
-            }
+            IEnumerable<byte> collection = new List<byte>();
+            collection = jaggedArray.Length > 1 ? jaggedArray.Aggregate(collection, (current, ledArray) => current.Concat(ledArray)) : jaggedArray[0];
             returnArray = collection.ToArray();
 
             return returnArray;
@@ -99,7 +96,6 @@ namespace ExternalLCDIntegration.Services
             {
                 resultsArray[loopCount] = taskArray[loopCount].Result;
             }
-
             return resultsArray;
         }
 

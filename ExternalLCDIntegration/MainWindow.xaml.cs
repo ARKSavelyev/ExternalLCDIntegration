@@ -23,16 +23,26 @@ namespace ExternalLCDIntegration
     /// </summary>
     public partial class MainWindow : Window
     {
-        private bool _isRunning = false;
+        private bool _isLEDReadingRunning;
+        private bool _isLCDReadingRunning;
         private ScreenLedCountModel _screenLedCount;
-        private SerialPort _port;
-        private readonly BackgroundWorker _ledBackgroundWorker;
+        private SerialPort _ledSerialPort;
+        private SerialPort _lcdSerialPort;
+        private BackgroundWorker _ledBackgroundWorker;
+        private BackgroundWorker _lcdBackgroundWorker;
         private readonly string _portMessage = "Please choose a comport before starting background job.";
         private readonly string _ledMessage = "The Led Count is invalid.";
 
         public MainWindow()
         {
             InitializeComponent();
+            InitialiseLEDBackgroundWorker();
+            InitialiseLCDBackgroundWorker();
+            InitialiseComportComboLists();
+        }
+
+        private void InitialiseLEDBackgroundWorker()
+        {
             _ledBackgroundWorker = new BackgroundWorker
             {
                 WorkerReportsProgress = true,
@@ -41,28 +51,53 @@ namespace ExternalLCDIntegration
             _ledBackgroundWorker.DoWork += LEDBackgroundWorkerOnDoWork;
             _ledBackgroundWorker.RunWorkerCompleted += LEDBackgroundWorkerStopWork;
             Closing += OnWindowClosing;
+        }
 
-            string[] portNames = SerialPort.GetPortNames();
-            foreach (var port in portNames)
+        private void InitialiseLCDBackgroundWorker()
+        {
+            _lcdBackgroundWorker = new BackgroundWorker
             {
-                comList.Items.Add(port);
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+            _lcdBackgroundWorker.DoWork += LCDBackgroundWorkerOnDoWork;
+            _lcdBackgroundWorker.RunWorkerCompleted += LCDBackgroundWorkerStopWork;
+            Closing += OnWindowClosing;
+        }
+
+        private void InitialiseComportComboLists()
+        {
+            var portNames = SerialPort.GetPortNames();
+            var comboLists = new List<ComboBox> { comListLED, comListLCD };
+            foreach (var comboList in comboLists)
+            {
+                foreach (var port in portNames)
+                {
+                    comboList.Items.Add(port);
+                }
             }
         }
 
         private void LEDBackgroundWorkerStopWork(object sender, RunWorkerCompletedEventArgs e)
         {
-            StartButton.Content = "Start";
-            StartButton.IsEnabled = true;
+            StartLEDButton.Content = "Start";
+            StartLEDButton.IsEnabled = true;
+        }
+
+        private void LCDBackgroundWorkerStopWork(object sender, RunWorkerCompletedEventArgs e)
+        {
+            StartLCDButton.Content = "Start";
+            StartLCDButton.IsEnabled = true;
         }
 
         private void OnWindowClosing(object sender, CancelEventArgs e)
         {
-            _port?.Close();
+            _ledSerialPort?.Close();
         }
 
-        private void StartButton_OnClick(object sender, RoutedEventArgs e)
+        private void StartLEDButton_OnClick(object sender, RoutedEventArgs e)
         {
-            if (_port == null)
+            if (_ledSerialPort == null || _ledSerialPort == _lcdSerialPort)
             {
                 MessageBox.Show(_portMessage);
                 return;
@@ -72,17 +107,40 @@ namespace ExternalLCDIntegration
                 MessageBox.Show(_ledMessage);
                 return;
             }
-            _isRunning = !_isRunning;
+            _isLEDReadingRunning = !_isLEDReadingRunning;
             if (_ledBackgroundWorker.IsBusy)
             {
-                StartButton.IsEnabled = false;
-                StartButton.Content = "Stopping...";
+                StartLEDButton.IsEnabled = false;
+                StartLEDButton.Content = "Stopping...";
                 _ledBackgroundWorker.CancelAsync();
             }
             else
             {
-                StartButton.Content = "Running";
+                StartLEDButton.Content = "Running";
                 _ledBackgroundWorker.RunWorkerAsync();
+            }
+        }
+
+        private void StartLCDButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            /*
+            if (_lcdSerialPort == null || _ledSerialPort == _lcdSerialPort)
+            {
+                MessageBox.Show(_portMessage);
+                return;
+            }
+            */
+            _isLEDReadingRunning = !_isLEDReadingRunning;
+            if (_lcdBackgroundWorker.IsBusy)
+            {
+                StartLCDButton.IsEnabled = false;
+                StartLCDButton.Content = "Stopping...";
+                _lcdBackgroundWorker.CancelAsync();
+            }
+            else
+            {
+                StartLCDButton.Content = "Running";
+                _lcdBackgroundWorker.RunWorkerAsync();
             }
         }
 
@@ -154,7 +212,7 @@ namespace ExternalLCDIntegration
                 #endregion
 
                 #region HorizonalBottom
-                readings[readingsCount++] = SendSideRequestAsync(screenHeight, screenWidth, horizontalDepth,
+                readings[readingsCount] = SendSideRequestAsync(screenHeight, screenWidth, horizontalDepth,
                     _screenLedCount.HorizontalLedCountBottom, 0, scan, bppModifier, stride, true, false, true);
                 #endregion
                 var resultsArray = ArrayService.AwaitTaskByteArray(readings);
@@ -162,12 +220,22 @@ namespace ExternalLCDIntegration
                 var endArray = ArrayService.ConvertToSingleArray(resultsArray);
                 var elapsedTime = timer.ElapsedMilliseconds.ToString();
                 timer.Reset();
-                UpdateTextBox(OutputBox, elapsedTime);
+                UpdateTextBox(OutputBox1, elapsedTime);
                 SendDataToSerialPort(endArray, endArray.Length);
-            } while (_isRunning);
+            } while (_isLEDReadingRunning);
             screenBitmap.Dispose();
         }
 
+
+        private void GetCPUTemperature()
+        {
+            do
+            {
+                WaitMilliseconds(1000);
+                var cpuReadings = HardwareService.GetCPUInfo();
+                UpdateTextBox(OutputBox2, string.Join(", ",cpuReadings));
+            } while (_isLCDReadingRunning);
+        }
 
         private Task<byte[]> SendSideRequestAsync(int screenHeight, int screenWidth, byte depth, byte sideLedCount, int currentLedCount, IntPtr screenPointer, int bppModifier, int stride, bool isIncremental, bool startFromZero, bool isHorizontal) 
         {
@@ -194,14 +262,16 @@ namespace ExternalLCDIntegration
             GetAverageColor();
         }
 
+        private void LCDBackgroundWorkerOnDoWork(object sender, DoWorkEventArgs e)
+        {
+            GetCPUTemperature();
+        }
+
         private bool GetLedCount()
         {
             try
             {
-                if (_screenLedCount == null)
-                {
-                    _screenLedCount = new ScreenLedCountModel();
-                }
+                _screenLedCount ??= new ScreenLedCountModel();
                 _screenLedCount.HorizontalLedCountTop = byte.Parse(HorizontalLedCountTop.Text);
                 _screenLedCount.HorizontalLedCountBottom = byte.Parse(HorizontalLedCountBottom.Text);
                 _screenLedCount.VerticalLedCountLeft = byte.Parse(VerticalLedCountLeft.Text);
@@ -216,33 +286,66 @@ namespace ExternalLCDIntegration
 
         
 
-        private void ConnectingBT_Click(object sender, RoutedEventArgs e)
+        private void ConnectLEDComport_Click(object sender, RoutedEventArgs e)
         {
-            if (_port == null)
+            if (_ledSerialPort == null)
             {
-                if (comList.SelectedItem == null) MessageBox.Show(_portMessage);
+                if (comListLED.SelectedItem == null) MessageBox.Show(_portMessage);
                 else
                 {
-                    var comPortName = comList.SelectedItem.ToString();
-                    _port = new SerialPort(comPortName, 115200, System.IO.Ports.Parity.None, 8,
+                    var comPortName = comListLED.SelectedItem.ToString();
+                    if (_lcdSerialPort != null && comPortName == _lcdSerialPort.PortName)
+                    {
+                        MessageBox.Show(_portMessage);
+                        return;
+                    }
+                    _ledSerialPort = new SerialPort(comPortName, 115200, System.IO.Ports.Parity.None, 8,
                         System.IO.Ports.StopBits.One) {ReadTimeout = 500, WriteTimeout = 500};
-                    _port.Open();
-                    ConnectingBT.Content = "Disconnect";
+                    _ledSerialPort.Open();
+                    ConnectLEDComport.Content = "Disconnect";
                 }
             }
             else
             {
-                _port.Close();
-                _port = null;
-                ConnectingBT.Content = "Connect";
+                _ledSerialPort.Close();
+                _ledSerialPort = null;
+                ConnectLEDComport.Content = "Connect";
+            }
+        }
+
+        private void ConnectLCDComport_Click(object sender, RoutedEventArgs e)
+        {
+            if (_lcdSerialPort == null)
+            {
+                if (comListLED.SelectedItem == null) MessageBox.Show(_portMessage);
+                else
+                {
+                    var comPortName = comListLED.SelectedItem.ToString();
+                    if (_ledSerialPort != null && comPortName == _ledSerialPort.PortName)
+                    {
+                        MessageBox.Show(_portMessage);
+                        return;
+                    }
+                    _ledSerialPort = new SerialPort(comPortName, 115200, System.IO.Ports.Parity.None, 8,
+                            System.IO.Ports.StopBits.One)
+                        { ReadTimeout = 500, WriteTimeout = 500 };
+                    _ledSerialPort.Open();
+                    ConnectLEDComport.Content = "Disconnect";
+                }
+            }
+            else
+            {
+                _ledSerialPort.Close();
+                _ledSerialPort = null;
+                ConnectLEDComport.Content = "Connect";
             }
         }
 
         private void SendDataToSerialPort(byte[] data, int len)//array length should be 3 times bigger than LEDCount
         {
             char[] StopByte = {'c'};
-            _port.Write(data, 0, len);
-            _port.Write(StopByte,0,1);
+            _ledSerialPort.Write(data, 0, len);
+            _ledSerialPort.Write(StopByte,0,1);
         }
 
     }

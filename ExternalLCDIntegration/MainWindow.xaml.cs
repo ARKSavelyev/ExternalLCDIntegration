@@ -130,7 +130,7 @@ namespace ExternalLCDIntegration
                 return;
             }
             */
-            _isLEDReadingRunning = !_isLEDReadingRunning;
+            _isLCDReadingRunning = !_isLCDReadingRunning;
             if (_lcdBackgroundWorker.IsBusy)
             {
                 StartLCDButton.IsEnabled = false;
@@ -233,7 +233,7 @@ namespace ExternalLCDIntegration
             {
                 WaitMilliseconds(1000);
                 var cpuReadings = HardwareService.GetCPUInfo();
-                UpdateTextBox(OutputBox2, string.Join(", ",cpuReadings));
+                UpdateTextBox(OutputBox2, string.Join(",",cpuReadings));
             } while (_isLCDReadingRunning);
         }
 
@@ -271,7 +271,7 @@ namespace ExternalLCDIntegration
         {
             try
             {
-                _screenLedCount ??= new ScreenLedCountModel();
+                _screenLedCount = _screenLedCount ?? new ScreenLedCountModel();
                 _screenLedCount.HorizontalLedCountTop = byte.Parse(HorizontalLedCountTop.Text);
                 _screenLedCount.HorizontalLedCountBottom = byte.Parse(HorizontalLedCountBottom.Text);
                 _screenLedCount.VerticalLedCountLeft = byte.Parse(VerticalLedCountLeft.Text);
